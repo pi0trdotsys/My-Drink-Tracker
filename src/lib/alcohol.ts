@@ -11,13 +11,13 @@ export type DrinkType = {
 };
 
 export const DRINK_TYPES: DrinkType[] = [
-  { id: "beer", name: "Piwo", emoji: "🍺", volumeMl: 500, abv: 5 },
-  { id: "wine", name: "Lampka wina", emoji: "🍷", volumeMl: 150, abv: 12 },
-  { id: "vodka", name: "Kieliszek wódki", emoji: "🥃", volumeMl: 50, abv: 40 },
-  { id: "whisky", name: "Whisky", emoji: "🥃", volumeMl: 50, abv: 43 },
-  { id: "gin", name: "Gin z tonikiem", emoji: "🍸", volumeMl: 250, abv: 9 },
-  { id: "drink", name: "Drink", emoji: "🍹", volumeMl: 200, abv: 14 },
-  { id: "prosecco", name: "Prosecco", emoji: "🥂", volumeMl: 120, abv: 11 },
+  { id: "beer", name: "Piwo", emoji: "PIW", volumeMl: 500, abv: 5 },
+  { id: "wine", name: "Lampka wina", emoji: "WIN", volumeMl: 150, abv: 12 },
+  { id: "vodka", name: "Kieliszek wódki", emoji: "WÓD", volumeMl: 50, abv: 40 },
+  { id: "whisky", name: "Whisky", emoji: "WHI", volumeMl: 50, abv: 43 },
+  { id: "gin", name: "Gin z tonikiem", emoji: "GIN", volumeMl: 250, abv: 9 },
+  { id: "drink", name: "Drink", emoji: "DRK", volumeMl: 200, abv: 14 },
+  { id: "prosecco", name: "Prosecco", emoji: "PRO", volumeMl: 120, abv: 11 },
 ];
 
 export function toUnits(volumeMl: number, abv: number, gramsPerUnit = GRAMS_PER_UNIT) {
