@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import {
   fmt,
   STATUS_LABEL,
-  weekSummary,
+  statusDetails,
   type Status,
   type WeekData,
 } from "@/lib/alcohol";
@@ -72,12 +72,92 @@ function Bars({
 }
 
 function LimitBar({ ratio, status }: { ratio: number; status: Status }) {
+  const filled = Math.min(ratio, 1) * 100;
+  const over = Math.min(Math.max(ratio - 1, 0), 1) * 100;
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
       <div
-        className={cn("h-full rounded-full", statusBg[status])}
-        style={{ width: `${Math.min(ratio * 100, 100)}%` }}
+        className={cn("h-full rounded-full transition-all", statusBg[status])}
+        style={{ width: `${filled}%` }}
       />
+      {over > 0 && (
+        <div
+          className="absolute inset-y-0 right-0 rounded-full bg-over/60 mix-blend-screen"
+          style={{ width: `${Math.max(over, 6)}%` }}
+        />
+      )}
+    </div>
+  );
+}
+
+function StatusPill({ status, label, pulse }: { status: Status; label: string; pulse?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+        status === "ok" && "bg-ok text-ok-foreground",
+        status === "warn" && "bg-warn text-warn-foreground",
+        status === "over" && "bg-over text-over-foreground",
+      )}
+    >
+      {pulse && status !== "ok" && (
+        <span className="relative flex size-1.5">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-current opacity-70" />
+          <span className="relative inline-flex size-1.5 rounded-full bg-current" />
+        </span>
+      )}
+      {label}
+    </span>
+  );
+}
+
+function AlertBox({
+  status,
+  headline,
+  message,
+  reasons,
+  compact,
+}: {
+  status: Status;
+  headline: string;
+  message: string;
+  reasons: string[];
+  compact?: boolean;
+}) {
+  if (status === "ok") return null;
+  return (
+    <div
+      className={cn(
+        "rounded-xl border px-3 py-2",
+        status === "over"
+          ? "border-over/50 bg-over/12"
+          : "border-warn/50 bg-warn/12",
+      )}
+    >
+      <div className={cn("flex items-center gap-1.5 text-[11px] font-semibold", statusText[status])}>
+        <span aria-hidden className="text-xs leading-none">
+          {status === "over" ? "!!" : "!"}
+        </span>
+        {headline}
+      </div>
+      {!compact && (
+        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{message}</p>
+      )}
+      {!compact && reasons.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {reasons.map((r) => (
+            <span
+              key={r}
+              className={cn(
+                "rounded-full border px-2 py-0.5 text-[10px] leading-none",
+                status === "over" ? "border-over/50 text-over" : "border-warn/50 text-warn",
+              )}
+            >
+              {r}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -91,26 +171,45 @@ export function AlcoholWidget({
   size?: Size;
   className?: string;
 }) {
-  const { total, drinkingDays, status } = weekSummary(week);
-  const ratio = total / week.unitLimit;
+  const { total, drinkingDays, status, ratio, overUnits, headline, message, reasons } =
+    statusDetails(week);
 
   const shell = cn(
     "relative overflow-hidden rounded-[22px] border border-border bg-card p-4 shadow-lg",
     "before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(120%_100%_at_100%_0%,color-mix(in_oklab,var(--primary)_14%,transparent),transparent_60%)]",
+    status === "over" && "border-over/60 shadow-[0_0_0_1px_color-mix(in_oklab,var(--over)_45%,transparent)]",
+    status === "warn" && "border-warn/50",
     className,
   );
 
   if (size === "2x1") {
     return (
       <div className={cn(shell, "flex items-center gap-3 py-3 pl-5")}>
-        <span className={cn("absolute left-0 top-0 h-full w-1.5", statusBg[status])} />
+        <span
+          className={cn(
+            "absolute left-0 top-0 h-full w-1.5",
+            statusBg[status],
+            status === "over" && "animate-pulse",
+          )}
+        />
         <div className="min-w-0">
-          <div className="font-display text-xl leading-none tracking-tight">
+          <div
+            className={cn(
+              "font-display text-xl leading-none tracking-tight",
+              status === "over" && "text-over",
+            )}
+          >
             {fmt(total)}
             <span className="text-sm text-muted-foreground">/{week.unitLimit} SU</span>
           </div>
-          <div className={cn("mt-1 text-[11px] leading-none", statusText[status])}>
-            {drinkingDays}/{week.dayLimit} dni · {STATUS_LABEL[status]}
+          <div className={cn("mt-1 flex items-center gap-1 text-[11px] leading-none", statusText[status])}>
+            {status !== "ok" && <span aria-hidden>{status === "over" ? "!!" : "!"}</span>}
+            <span className="truncate">
+              {drinkingDays}/{week.dayLimit} dni ·{" "}
+              {status === "over" && overUnits > 0
+                ? `+${fmt(overUnits)} SU ponad limit`
+                : STATUS_LABEL[status]}
+            </span>
           </div>
         </div>
         <div className="ml-auto w-[46%]">
@@ -128,12 +227,23 @@ export function AlcoholWidget({
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
               Ten tydzień
             </div>
-            <div className="font-display text-3xl leading-tight tracking-tight">
+            <div
+              className={cn(
+                "font-display text-3xl leading-tight tracking-tight",
+                status === "over" && "text-over",
+              )}
+            >
               {fmt(total)}
               <span className="text-base text-muted-foreground"> / {week.unitLimit} SU</span>
             </div>
           </div>
-          <span className={cn("mt-1 size-3 rounded-full", statusBg[status])} />
+          <span
+            className={cn(
+              "mt-1 size-3 rounded-full",
+              statusBg[status],
+              status !== "ok" && "animate-pulse",
+            )}
+          />
         </div>
         <Bars week={week} status={status} height="h-16" showLabels />
         <LimitBar ratio={ratio} status={status} />
@@ -143,6 +253,7 @@ export function AlcoholWidget({
           </span>
           <span className={statusText[status]}>{STATUS_LABEL[status]}</span>
         </div>
+        <AlertBox status={status} headline={headline} message={message} reasons={reasons} compact />
       </div>
     );
   }
@@ -157,7 +268,14 @@ export function AlcoholWidget({
       </div>
       <div className="flex items-end justify-between gap-4">
         <div>
-          <div className="font-display text-5xl leading-none tracking-tight">{fmt(total)}</div>
+          <div
+            className={cn(
+              "font-display text-5xl leading-none tracking-tight",
+              status === "over" && "text-over",
+            )}
+          >
+            {fmt(total)}
+          </div>
           <div className="mt-1 text-xs text-muted-foreground">/ {week.unitLimit} SU limitu</div>
         </div>
         <div className="flex-1">
@@ -169,24 +287,9 @@ export function AlcoholWidget({
         <span className="text-muted-foreground">
           {drinkingDays}/{week.dayLimit} dni z alkoholem
         </span>
-        <span
-          className={cn(
-            "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-            status === "ok" && "bg-ok text-ok-foreground",
-            status === "warn" && "bg-warn text-warn-foreground",
-            status === "over" && "bg-over text-over-foreground",
-          )}
-        >
-          {STATUS_LABEL[status]}
-        </span>
+        <StatusPill status={status} label={STATUS_LABEL[status]} pulse />
       </div>
-      {status !== "ok" && (
-        <p className={cn("text-[11px]", statusText[status])}>
-          {status === "over"
-            ? `Limit przekroczony o ${fmt(Math.max(total - week.unitLimit, 0))} SU.`
-            : `Zostało ${fmt(week.unitLimit - total)} SU do limitu.`}
-        </p>
-      )}
+      <AlertBox status={status} headline={headline} message={message} reasons={reasons} />
     </div>
   );
 }
