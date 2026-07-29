@@ -57,6 +57,77 @@ export function weekSummary(week: WeekData) {
   return { total, drinkingDays, status };
 }
 
+export type StatusDetails = {
+  total: number;
+  drinkingDays: number;
+  status: Status;
+  ratio: number;
+  /** SU above the limit (0 when within limit) */
+  overUnits: number;
+  /** SU left to the limit (0 when exceeded) */
+  remainingUnits: number;
+  /** drinking days above the day limit */
+  overDays: number;
+  remainingDays: number;
+  /** short headline for the widget alert */
+  headline: string;
+  /** full sentence explaining the status */
+  message: string;
+  /** compact chips, e.g. "+2,4 SU", "+1 dzień" */
+  reasons: string[];
+};
+
+export function statusDetails(week: WeekData): StatusDetails {
+  const { total, drinkingDays, status } = weekSummary(week);
+  const overUnits = Math.max(total - week.unitLimit, 0);
+  const remainingUnits = Math.max(week.unitLimit - total, 0);
+  const overDays = Math.max(drinkingDays - week.dayLimit, 0);
+  const remainingDays = Math.max(week.dayLimit - drinkingDays, 0);
+  const ratio = week.unitLimit > 0 ? total / week.unitLimit : 0;
+
+  const reasons: string[] = [];
+  if (overUnits > 0) reasons.push(`+${fmt(overUnits)} SU ponad limit`);
+  if (overDays > 0) reasons.push(`+${overDays} dzień z alkoholem ponad limit`);
+  if (status === "warn") {
+    if (overUnits === 0 && remainingUnits <= week.unitLimit * (1 - week.warnRatio))
+      reasons.push(`zostało ${fmt(remainingUnits)} SU`);
+    if (overDays === 0 && remainingDays === 0) reasons.push("wykorzystane wszystkie dni");
+  }
+
+  let headline: string;
+  let message: string;
+  if (status === "over") {
+    headline = "Limit przekroczony";
+    message =
+      overUnits > 0
+        ? `Przekroczono tygodniowy limit o ${fmt(overUnits)} SU. Zrób przerwę do końca tygodnia.`
+        : `Przekroczono limit dni z alkoholem (${drinkingDays}/${week.dayLimit}). Zrób przerwę do końca tygodnia.`;
+  } else if (status === "warn") {
+    headline = "Blisko limitu";
+    message =
+      remainingUnits > 0
+        ? `Zostało tylko ${fmt(remainingUnits)} SU i ${remainingDays} dni z alkoholem.`
+        : `Wykorzystano cały limit dni z alkoholem w tym tygodniu.`;
+  } else {
+    headline = "W normie";
+    message = `Zostało ${fmt(remainingUnits)} SU i ${remainingDays} dni z alkoholem.`;
+  }
+
+  return {
+    total,
+    drinkingDays,
+    status,
+    ratio,
+    overUnits,
+    remainingUnits,
+    overDays,
+    remainingDays,
+    headline,
+    message,
+    reasons,
+  };
+}
+
 const DAYS = ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"];
 const base = { range: "27 lip – 2 sie", todayIndex: 4, unitLimit: 14, dayLimit: 4, warnRatio: 0.8 };
 
