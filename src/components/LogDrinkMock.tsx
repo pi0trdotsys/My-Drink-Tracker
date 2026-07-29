@@ -27,8 +27,10 @@ export function LogDrinkMock() {
               selected.id === d.id && "border-primary bg-accent",
             )}
           >
-            <div className="text-xl">{d.emoji}</div>
-            <div className="mt-1 text-xs font-medium leading-tight">{d.name}</div>
+            <div className="inline-flex rounded-md bg-primary/15 px-1.5 py-0.5 font-display text-[11px] tracking-wide text-primary">
+              {d.emoji}
+            </div>
+            <div className="mt-1.5 text-xs font-medium leading-tight">{d.name}</div>
             <div className="text-[11px] text-muted-foreground">
               {d.volumeMl} ml · {d.abv}% · {fmt(toUnits(d.volumeMl, d.abv))} SU
             </div>
@@ -38,8 +40,8 @@ export function LogDrinkMock() {
           type="button"
           className="rounded-2xl border border-dashed border-border p-3 text-left text-xs text-muted-foreground transition-colors hover:bg-accent"
         >
-          <div className="text-xl">＋</div>
-          <div className="mt-1 font-medium">Własny typ</div>
+          <div className="font-display text-base leading-none text-primary">+</div>
+          <div className="mt-1.5 font-medium">Własny typ</div>
         </button>
       </div>
 
