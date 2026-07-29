@@ -85,7 +85,9 @@ export function SettingsMock() {
         <ul className="mt-2 divide-y divide-border text-sm">
           {DRINK_TYPES.map((d) => (
             <li key={d.id} className="flex items-center gap-3 py-2">
-              <span>{d.emoji}</span>
+              <span className="rounded-md bg-primary/15 px-1.5 py-0.5 font-display text-[11px] text-primary">
+                {d.emoji}
+              </span>
               <span className="flex-1">{d.name}</span>
               <span className="text-xs text-muted-foreground">
                 {d.volumeMl} ml · {d.abv}% ·{" "}
@@ -99,7 +101,7 @@ export function SettingsMock() {
           type="button"
           className="mt-3 w-full rounded-2xl border border-dashed border-border py-2 text-sm text-muted-foreground transition-colors hover:bg-accent"
         >
-          ＋ Dodaj własny typ
+          + Dodaj własny typ
         </button>
       </div>
     </div>
