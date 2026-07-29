@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#FF171922</color>
+    <color name="surface">#FF23252F</color>
+    <color name="surface2">#FF2E313D</color>
+    <color name="foreground">#FFF1F2F7</color>
+    <color name="muted">#FFA8ABB8</color>
+    <color name="primary">#FFE3A54B</color>
+    <color name="ok">#FF45C08A</color>
+    <color name="warn">#FFE6B646</color>
+    <color name="over">#FFDE5140</color>
+    <color name="border">#33FFFFFF</color>
+</resources>

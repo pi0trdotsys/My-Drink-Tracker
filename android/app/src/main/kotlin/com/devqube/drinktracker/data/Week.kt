@@ -1,0 +1,78 @@
+package com.devqube.drinktracker.data
+
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
+import java.util.Locale
+
+private val DAY_LABELS = listOf("Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd")
+private val PL = Locale("pl", "PL")
+
+/** Buduje dane bieżącego tygodnia (poniedziałek–niedziela) z listy wpisów. */
+fun buildWeek(entries: List<DrinkEntry>, settings: AppSettings, zone: ZoneId = ZoneId.systemDefault()): WeekData {
+    val today = LocalDate.now(zone)
+    val monday = today.minusDays((today.dayOfWeek.value - 1).toLong())
+    val sunday = monday.plusDays(6)
+
+    val perDay = DoubleArray(7)
+    entries.forEach { e ->
+        val d = Instant.ofEpochMilli(e.timestamp).atZone(zone).toLocalDate()
+        if (!d.isBefore(monday) && !d.isAfter(sunday)) {
+            val idx = ChronoUnit.DAYS.between(monday, d).toInt()
+            if (idx in 0..6) perDay[idx] += e.units
+        }
+    }
+
+    val days = (0..6).map { DayEntry(DAY_LABELS[it], perDay[it]) }
+    val todayIndex = ChronoUnit.DAYS.between(monday, today).toInt().coerceIn(0, 6)
+
+    return WeekData(
+        range = formatRange(monday, sunday),
+        days = days,
+        todayIndex = todayIndex,
+        unitLimit = settings.unitLimit,
+        dayLimit = settings.dayLimit,
+        warnRatio = settings.warnRatio,
+    )
+}
+
+private fun formatRange(from: LocalDate, to: LocalDate): String {
+    val m1 = from.month.getDisplayName(TextStyle.SHORT, PL).take(3)
+    val m2 = to.month.getDisplayName(TextStyle.SHORT, PL).take(3)
+    return "${from.dayOfMonth} $m1 – ${to.dayOfMonth} $m2"
+}
+
+/** Suma gramów czystego etanolu wypitych dzisiaj. */
+fun gramsToday(entries: List<DrinkEntry>, zone: ZoneId = ZoneId.systemDefault()): Double {
+    val today = LocalDate.now(zone)
+    return entries.filter { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() == today }
+        .sumOf { it.grams }
+}
+
+/** Godziny od pierwszego dzisiejszego trunku (0, gdy brak). */
+fun hoursSinceFirstToday(entries: List<DrinkEntry>, zone: ZoneId = ZoneId.systemDefault()): Double {
+    val today = LocalDate.now(zone)
+    val todays = entries.filter { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() == today }
+    if (todays.isEmpty()) return 0.0
+    val first = todays.minOf { it.timestamp }
+    return (System.currentTimeMillis() - first) / 3_600_000.0
+}
+
+/** Wygodny skrót – szacowane BAC z listy wpisów i ustawień. */
+fun currentBac(entries: List<DrinkEntry>, settings: AppSettings): BacEstimate =
+    estimateBac(
+        gramsToday = gramsToday(entries),
+        hoursSinceFirst = hoursSinceFirstToday(entries),
+        weightKg = settings.weightKg,
+        sex = settings.sex,
+    )
+
+fun formatEntryTime(timestamp: Long, zone: ZoneId = ZoneId.systemDefault()): Pair<String, String> {
+    val dt: LocalDateTime = Instant.ofEpochMilli(timestamp).atZone(zone).toLocalDateTime()
+    val day = dt.dayOfWeek.getDisplayName(TextStyle.FULL, PL).replaceFirstChar { it.uppercase(PL) }
+    val time = String.format(Locale.US, "%02d:%02d", dt.hour, dt.minute)
+    return day to time
+}

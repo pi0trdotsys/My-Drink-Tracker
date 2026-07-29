@@ -1,6 +1,46 @@
 # My Drink Tracker
 
-Przygotuj mi makiety/wizualizację spożycia alkoholu w bieżącym tygodniu w postaci widgeta, chcę by był wykres i każdy z dni bieżącego tygodnia bym, mógł szybko ocenić ile razy piłem alkohol w tym tygodniu. Chcę logować każdy trunek i by był przeliczany na odpowiednie jednostki do pomiaru spożycia alkoholu. Chcę mieć ustawienia dotyczące tego ile razy pozwalam sobie na wypicie alkoholu w tygodniu i ile spożyłem w sumie. Logowanie w samej aplikacji, typy: piwo, kieliszek wina, wódka, drink, whisky, gin itp. (łatwe do dostosowania) + ostrzeżenia jeżeli w danym tygodniu spożyłem zbyt dużo alkoholu i status na widgecie, rozmiar widgetu skalowalny minimalnie do 2x1 i wszystkie najważniejsze informacje mają być wciąż widoczne
+Śledzenie spożycia alkoholu w bieżącym tygodniu: logowanie trunków przeliczanych na
+jednostki standardowe (SU), wykres dni tygodnia, limity i ostrzeżenia oraz skalowalny
+widget (2×1 / 2×2 / 4×2) z najważniejszymi informacjami zawsze widocznymi.
+
+Repozytorium zawiera dwa warianty:
+
+- **Makiety webowe (TypeScript)** – `src/`, zbudowane w [Lovable](https://lovable.dev)
+  (React + TanStack + Tailwind). Wizualizacja widgetu w trzech rozmiarach i ekranów aplikacji.
+- **Natywna aplikacja Android (Kotlin)** – `android/`, pełne, działające odwzorowanie makiet
+  w Jetpack Compose.
+
+## 📱 Aplikacja Android (`android/`)
+
+W pełni funkcjonalna, natywna apka w Kotlinie odwzorowująca makiety i rozszerzająca je o:
+
+- **Logowanie trunków** – gotowe typy (piwo, wino, wódka, whisky, gin, drink, prosecco),
+  własne typy, suwaki objętości/mocy, przelicznik SU, historia wpisów.
+- **Limity i statusy** – limit tygodniowy, maks. dni z alkoholem, próg ostrzeżenia,
+  statusy `W normie / Uwaga / Przekroczono`.
+- **Poziom alkoholu we krwi (BAC)** – szacowanie promili wzorem Widmarka na podstawie
+  masy ciała i płci, wraz z czasem do trzeźwości.
+- **Powiadomienia** – przy zbliżaniu do limitu, po jego przekroczeniu oraz cotygodniowe
+  podsumowanie (WorkManager).
+- **Widget na ekran główny** (Glance) – skalowalny, czyta te same dane.
+- **Fancy smaczek** – złoty „shimmer" na głównej liczbie, rotujące dowcipne hasła, licznik
+  trzeźwych dni z odznakami oraz powiadomienia z charakterem.
+
+Stack: Jetpack Compose (Material 3) · Glance · DataStore · WorkManager · minSdk 26 / targetSdk 36.
+
+### Budowanie
+
+```sh
+cd android
+./gradlew :app:assembleDebug
+# APK: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Gotowy plik APK dostępny jest też w sekcji [Releases](../../releases).
+Szczegóły w [`android/README.md`](android/README.md).
+
+## 🌐 Makiety webowe (`src/`)
 
 This project was built with [Lovable](https://lovable.dev).
 

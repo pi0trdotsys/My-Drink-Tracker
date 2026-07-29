@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Drink Tracker</string>
+    <string name="widget_label">Spożycie alkoholu</string>
+    <string name="widget_description">Tygodniowy licznik jednostek SU, wykres dni i status limitu.</string>
+</resources>

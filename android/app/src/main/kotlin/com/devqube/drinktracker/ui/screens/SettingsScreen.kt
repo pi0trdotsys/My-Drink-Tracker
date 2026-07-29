@@ -1,0 +1,250 @@
+package com.devqube.drinktracker.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.devqube.drinktracker.data.DrinkType
+import com.devqube.drinktracker.data.Sex
+import com.devqube.drinktracker.data.fmt
+import com.devqube.drinktracker.data.toUnits
+import com.devqube.drinktracker.ui.AppViewModel
+import com.devqube.drinktracker.ui.components.Card
+import com.devqube.drinktracker.ui.components.Eyebrow
+import com.devqube.drinktracker.ui.components.LabeledSlider
+import com.devqube.drinktracker.ui.theme.LocalDrinkColors
+
+@Composable
+fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
+    val settings by vm.settings.collectAsStateWithLifecycle()
+    val types by vm.drinkTypes.collectAsStateWithLifecycle()
+    val colors = LocalDrinkColors.current
+    var showAddType by remember { mutableStateOf(false) }
+
+    Column(
+        modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Card {
+            Text("Ustawienia limitów", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(16.dp))
+
+            LabeledSlider(
+                label = "Limit tygodniowy",
+                valueText = "${settings.unitLimit.toInt()} SU",
+                value = settings.unitLimit.toFloat(),
+                onValueChange = { v -> vm.updateSettings { it.copy(unitLimit = v.toDouble()) } },
+                valueRange = 0f..30f,
+                steps = 29,
+            )
+            Spacer(Modifier.height(10.dp))
+            LabeledSlider(
+                label = "Maks. dni z alkoholem w tygodniu",
+                valueText = "${settings.dayLimit} dni",
+                value = settings.dayLimit.toFloat(),
+                onValueChange = { v -> vm.updateSettings { it.copy(dayLimit = v.toInt()) } },
+                valueRange = 0f..7f,
+                steps = 6,
+            )
+            Spacer(Modifier.height(10.dp))
+            LabeledSlider(
+                label = "Definicja jednostki (g czystego etanolu)",
+                valueText = "${settings.gramsPerUnit} g",
+                value = settings.gramsPerUnit.toFloat(),
+                onValueChange = { v -> vm.updateSettings { it.copy(gramsPerUnit = v.toInt()) } },
+                valueRange = 8f..14f,
+                steps = 5,
+            )
+            Spacer(Modifier.height(10.dp))
+            LabeledSlider(
+                label = "Próg ostrzeżenia",
+                valueText = "${settings.warnRatioPercent}% (${fmt(settings.unitLimit * settings.warnRatioPercent / 100)} SU)",
+                value = settings.warnRatioPercent.toFloat(),
+                onValueChange = { v -> vm.updateSettings { it.copy(warnRatioPercent = (Math.round(v / 5f) * 5)) } },
+                valueRange = 50f..100f,
+                steps = 9,
+            )
+            Spacer(Modifier.height(14.dp))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(colors.surface2.copy(alpha = 0.7f))
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Powiadomienia (ostrzeżenia + podsumowanie tygodnia)", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Switch(
+                    checked = settings.notificationsEnabled,
+                    onCheckedChange = { c -> vm.updateSettings { it.copy(notificationsEnabled = c) } },
+                    colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                )
+            }
+        }
+
+        // Sekcja BAC – masa ciała i płeć.
+        Card {
+            Text("Kalkulator poziomu alkoholu", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Używane do szacowania promili we krwi (wzór Widmarka).",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.muted,
+            )
+            Spacer(Modifier.height(14.dp))
+            LabeledSlider(
+                label = "Masa ciała",
+                valueText = "${settings.weightKg.toInt()} kg",
+                value = settings.weightKg.toFloat(),
+                onValueChange = { v -> vm.updateSettings { it.copy(weightKg = v.toDouble()) } },
+                valueRange = 40f..150f,
+                steps = 21,
+            )
+            Spacer(Modifier.height(14.dp))
+            Text("Płeć", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Sex.entries.forEach { s ->
+                    SegChip(
+                        label = s.label,
+                        selected = settings.sex == s,
+                        modifier = Modifier.weight(1f),
+                        onClick = { vm.updateSettings { it.copy(sex = s) } },
+                    )
+                }
+            }
+        }
+
+        Card {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Eyebrow("Typy trunków")
+                Text("+ Dodaj", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { showAddType = true })
+            }
+            Spacer(Modifier.height(8.dp))
+            types.forEach { t ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(t.emoji, fontSize = 18.sp)
+                    Spacer(Modifier.width(10.dp))
+                    Text(t.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "${t.volumeMl} ml · ${fmt(t.abv)}% · ${fmt(toUnits(t.volumeMl.toDouble(), t.abv, settings.gramsPerUnit))} SU",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.muted,
+                    )
+                    if (t.custom) {
+                        IconButton(onClick = { vm.deleteCustomType(t.id) }) {
+                            Icon(Icons.Default.Close, contentDescription = "Usuń typ", tint = colors.muted)
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+    }
+
+    if (showAddType) {
+        AddTypeDialog(
+            onDismiss = { showAddType = false },
+            onConfirm = { type ->
+                vm.addCustomType(type)
+                showAddType = false
+            },
+        )
+    }
+}
+
+@Composable
+private fun SegChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalDrinkColors.current
+    Box(
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else colors.surface2.copy(alpha = 0.6f))
+            .border(1.dp, if (selected) MaterialTheme.colorScheme.primary else colors.border, RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+        )
+    }
+}
+
+@Composable
+private fun AddTypeDialog(onDismiss: () -> Unit, onConfirm: (DrinkType) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var emoji by remember { mutableStateOf("🥤") }
+    var volume by remember { mutableStateOf("330") }
+    var abv by remember { mutableStateOf("5") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nowy typ trunku") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(name, { name = it }, label = { Text("Nazwa") }, singleLine = true)
+                OutlinedTextField(emoji, { emoji = it.take(2) }, label = { Text("Emoji") }, singleLine = true)
+                OutlinedTextField(volume, { volume = it.filter(Char::isDigit) }, label = { Text("Objętość (ml)") }, singleLine = true)
+                OutlinedTextField(abv, { abv = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text("Moc (%)") }, singleLine = true)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val v = volume.toIntOrNull() ?: 330
+                val a = abv.toDoubleOrNull() ?: 5.0
+                onConfirm(
+                    DrinkType(
+                        id = "custom_${System.currentTimeMillis()}",
+                        name = name.ifBlank { "Własny trunek" },
+                        emoji = emoji.ifBlank { "🥤" },
+                        volumeMl = v,
+                        abv = a,
+                        custom = true,
+                    )
+                )
+            }) { Text("Dodaj") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj") } },
+    )
+}
