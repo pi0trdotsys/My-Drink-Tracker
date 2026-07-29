@@ -79,7 +79,7 @@ function Index() {
             {STATES.map((s) => (
               <div key={s.key}>
                 <div className="mb-2 text-xs text-muted-foreground">{s.label}</div>
-                <AlcoholWidget week={s.week} size="2x2" className="aspect-square" />
+                <AlcoholWidget week={s.week} size="2x2" />
               </div>
             ))}
           </div>
