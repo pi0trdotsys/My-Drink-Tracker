@@ -70,6 +70,25 @@ fun currentBac(entries: List<DrinkEntry>, settings: AppSettings): BacEstimate =
         sex = settings.sex,
     )
 
+/** Krótka etykieta wybranego momentu, np. „Dziś, 14:09" lub „28 lip, 21:40". */
+fun formatWhenLabel(millis: Long, zone: ZoneId = ZoneId.systemDefault()): String {
+    val dt = Instant.ofEpochMilli(millis).atZone(zone).toLocalDateTime()
+    val time = String.format(Locale.US, "%02d:%02d", dt.hour, dt.minute)
+    val today = LocalDate.now(zone)
+    return if (dt.toLocalDate() == today) {
+        "Dziś, $time"
+    } else {
+        val m = dt.month.getDisplayName(TextStyle.SHORT, PL).take(3)
+        "${dt.dayOfMonth} $m, $time"
+    }
+}
+
+/** Łączy datę (UTC z DatePickera) z godziną/minutą w strefie lokalnej → epoch millis. */
+fun combineDateTime(dateUtcMillis: Long, hour: Int, minute: Int, zone: ZoneId = ZoneId.systemDefault()): Long {
+    val date = Instant.ofEpochMilli(dateUtcMillis).atZone(ZoneId.of("UTC")).toLocalDate()
+    return date.atTime(hour, minute).atZone(zone).toInstant().toEpochMilli()
+}
+
 fun formatEntryTime(timestamp: Long, zone: ZoneId = ZoneId.systemDefault()): Pair<String, String> {
     val dt: LocalDateTime = Instant.ofEpochMilli(timestamp).atZone(zone).toLocalDateTime()
     val day = dt.dayOfWeek.getDisplayName(TextStyle.FULL, PL).replaceFirstChar { it.uppercase(PL) }

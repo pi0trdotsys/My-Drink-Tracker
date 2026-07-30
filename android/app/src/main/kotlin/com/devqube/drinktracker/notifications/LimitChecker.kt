@@ -2,14 +2,15 @@ package com.devqube.drinktracker.notifications
 
 import android.content.Context
 import com.devqube.drinktracker.data.Fancy
-import com.devqube.drinktracker.data.Status
 import com.devqube.drinktracker.data.Store
 import com.devqube.drinktracker.data.buildWeek
 import com.devqube.drinktracker.data.statusDetails
+import com.devqube.drinktracker.data.toUnits
 
 /**
- * Po zalogowaniu trunku sprawdza status tygodnia i wysyła powiadomienie,
- * gdy status wzrósł (ok -> warn -> over). Nie powtarza tego samego statusu.
+ * Po zalogowaniu (również wstecznym) trunku wysyła powiadomienie "planujące":
+ * ile jeszcze możesz wypić w tym tygodniu, wyrażone w konkretnych piwach.
+ * Ton i priorytet zależą od statusu (spokojny plan / ostrzeżenie / stop).
  */
 object LimitChecker {
 
@@ -21,24 +22,12 @@ object LimitChecker {
         val entries = store.snapshotEntries()
         val week = buildWeek(entries, settings)
         val details = statusDetails(week)
-        val key = Notifier.statusKey(details)
-        val last = store.lastNotifiedStatus()
 
-        // Reaguj tylko na eskalację względem poprzedniego powiadomienia.
-        val rank = mapOf("ok" to 0, "warn" to 1, "over" to 2)
-        val escalated = (rank[key] ?: 0) > (rank[last] ?: 0)
+        // Referencja: jedno "standardowe" piwo (0,5 l, 5%) w bieżącej definicji jednostki.
+        val oneBeerUnits = toUnits(500.0, 5.0, settings.gramsPerUnit)
+        val (title, body) = Fancy.planMessage(details, oneBeerUnits)
 
-        when (details.status) {
-            Status.WARN -> if (escalated) {
-                val (t, b) = Fancy.warnNotification(details)
-                Notifier.notifyLimit(context, t, b, over = false)
-            }
-            Status.OVER -> if (escalated || last != "over") {
-                val (t, b) = Fancy.overNotification(details)
-                Notifier.notifyLimit(context, t, b, over = true)
-            }
-            Status.OK -> Unit
-        }
-        store.setLastNotifiedStatus(key)
+        Notifier.notifyStatus(context, title, body, details.status)
+        store.setLastNotifiedStatus(Notifier.statusKey(details))
     }
 }

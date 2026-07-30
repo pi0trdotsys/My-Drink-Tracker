@@ -29,12 +29,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val drinkTypes: StateFlow<List<DrinkType>> =
         store.allDrinkTypes.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    fun addDrink(name: String, volumeMl: Double, abv: Double) {
+    fun addDrink(name: String, volumeMl: Double, abv: Double, timestamp: Long = System.currentTimeMillis()) {
         viewModelScope.launch {
             val gramsPerUnit = store.snapshotSettings().gramsPerUnit
             val entry = DrinkEntry(
                 id = System.currentTimeMillis(),
-                timestamp = System.currentTimeMillis(),
+                timestamp = timestamp,
                 name = name,
                 volumeMl = volumeMl,
                 abv = abv,

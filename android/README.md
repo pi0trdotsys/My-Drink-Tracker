@@ -11,15 +11,20 @@ standardowych (SU), pokazuje wykres dni, statusy limitu i skalowalny widget na e
   widget w rozmiarach 2×1, 2×2 i 4×2 (wszystkie kluczowe informacje widoczne nawet w 2×1).
 - **Logowanie trunków** – gotowe typy (piwo, wino, wódka, whisky, gin, drink, prosecco),
   suwaki objętości i mocy, własne typy trunków, edytowalna nazwa wpisu, historia z usuwaniem.
+- **Logowanie wstecz** – selektor „Kiedy" z wyborem daty i godziny (Material 3 Date/Time Picker);
+  wpis trafia na właściwy dzień tygodnia i nie zawyża bieżącego promila.
 - **Ustawienia limitów** – limit tygodniowy, maks. dni z alkoholem, definicja jednostki (g etanolu),
   próg ostrzeżenia, przełącznik powiadomień.
 - **Poziom alkoholu we krwi (BAC)** – szacowanie promili wzorem Widmarka na podstawie
   **masy ciała** i płci: `BAC(‰) = g_etanolu / (masa_kg × r) − 0,15 × godziny`.
   Karta pokazuje promile, ocenę słowną i czas do trzeźwości.
-- **Powiadomienia**
-  - **Zbliżanie do limitu** – gdy przekroczysz próg ostrzeżenia (domyślnie 80%).
-  - **Przekroczenie limitu** – gdy przekroczysz limit SU lub liczbę dni.
+- **Powiadomienia z planowaniem tygodnia** – po każdym wpisie podpowiadają, ile jeszcze możesz
+  wypić, przeliczając pozostały limit na konkretne piwa: „Zostało Ci maksymalnie 2 piwa (…SU),
+  zaplanuj to dobrze 📅", a po przekroczeniu „Stop na ten tydzień 🛑 — już więcej nie pij".
+  - **Zbliżanie do limitu / przekroczenie** – kanał wysokiego priorytetu (heads-up).
   - **Podsumowanie tygodnia** – cyklicznie w niedzielę o 20:00 (WorkManager).
+  - **Własny dźwięk** – „brzdęk kieliszków" (toast/cheers) generowany syntetycznie,
+    podpięty do wszystkich kanałów (`res/raw/clink_cheers.wav`).
 - **Widget na ekran główny** (Glance) – skalowalny; czyta te same dane, klik otwiera aplikację.
 - **Fancy smaczek** – złoty „shimmer" przesuwający się po głównej liczbie, rotujące dowcipne
   hasła zależne od statusu, licznik trzeźwych dni z odznakami (🌱⭐🔥🥇🏆) oraz powiadomienia

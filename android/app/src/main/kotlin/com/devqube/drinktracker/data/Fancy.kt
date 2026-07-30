@@ -78,6 +78,58 @@ object Fancy {
         else -> "$streak trzeźwych dni z rzędu ${streakBadge(streak)}"
     }
 
+    // --- System "planowania" tygodnia: ile jeszcze możesz wypić ---
+
+    /** Polska odmiana rzeczownika „piwo": 1 piwo, 2–4 piwa, 5+ piw. */
+    fun beerWord(n: Int): String {
+        val m10 = n % 10
+        val m100 = n % 100
+        return when {
+            n == 1 -> "piwo"
+            m10 in 2..4 && m100 !in 12..14 -> "piwa"
+            else -> "piw"
+        }
+    }
+
+    /** Ile piw (dla podanego przelicznika 1 piwa w SU) mieści się w pozostałym limicie. */
+    fun beersLeft(remainingUnits: Double, oneBeerUnits: Double): Int {
+        if (oneBeerUnits <= 0) return 0
+        return kotlin.math.floor(remainingUnits / oneBeerUnits).toInt().coerceAtLeast(0)
+    }
+
+    /**
+     * Komunikat "planujący" po zalogowaniu trunku: ile jeszcze możesz wypić,
+     * wyrażone również w konkretnych piwach, z podpowiedzią by dobrze to rozplanować.
+     */
+    fun planMessage(details: StatusDetails, oneBeerUnits: Double): Pair<String, String> {
+        if (details.status == Status.OVER) {
+            val title = "Stop na ten tydzień 🛑"
+            val body = if (details.overUnits > 0)
+                "W tym tygodniu już więcej nie pij — jesteś ${fmt(details.overUnits)} SU ponad plan. Reset w poniedziałek 🔁"
+            else
+                "Wykorzystano wszystkie dni z alkoholem (${details.drinkingDays}/${details.drinkingDays + details.remainingDays}). Do poniedziałku odpuść 🔁"
+            return title to body
+        }
+
+        val remaining = details.remainingUnits
+        val beers = beersLeft(remaining, oneBeerUnits)
+        val daysTail = if (details.remainingDays > 0) " i ${details.remainingDays} dni z alkoholem" else ", ale dni z alkoholem masz już wykorzystane"
+
+        return when {
+            remaining <= 0.05 ->
+                "To był ostatni w tym tygodniu 🎯" to
+                    "Limit dokładnie wykorzystany. Resztę tygodnia zaplanuj na spokojnie 🧘"
+            beers == 0 ->
+                "Ostatnie krople 🤏" to
+                    "Zostało Ci mniej niż jedno piwo (${fmt(remaining)} SU)$daysTail. Trzymaj się planu!"
+            else -> {
+                val head = if (details.status == Status.WARN) "Blisko limitu ${emblem(details.status)}" else "Plan tygodnia 🍺"
+                head to
+                    "Zostało Ci maksymalnie $beers ${beerWord(beers)} (${fmt(remaining)} SU)$daysTail. Zaplanuj to dobrze 📅"
+            }
+        }
+    }
+
     // --- Teksty powiadomień z charakterem ---
 
     fun warnNotification(details: StatusDetails): Pair<String, String> =
