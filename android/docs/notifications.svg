@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="392" viewBox="0 0 720 392" font-family="'Segoe UI',Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Powiadomienia z planowaniem tygodnia i dźwiękiem">
+  <defs>
+    <g id="appicon">
+      <circle cx="0" cy="0" r="18" fill="#E3A54B"/>
+      <polygon points="-8,-9 8,-9 1,1 -1,1" fill="#171922"/>
+      <rect x="-1" y="1" width="2" height="8" fill="#171922"/>
+      <rect x="-6" y="9" width="12" height="2.5" rx="1" fill="#171922"/>
+      <circle cx="6" cy="-11" r="2.4" fill="#171922"/>
+    </g>
+    <style>.t{fill:#1b1c22;font-weight:700;font-size:15px;}.b{fill:#4b4d57;font-size:12.5px;}.m{fill:#8a8d99;font-size:11px;}</style>
+  </defs>
+
+  <!-- Card 1: plan -->
+  <rect x="20" y="16" width="680" height="96" rx="20" fill="#F4F2F7"/>
+  <use href="#appicon" x="58" y="64"/>
+  <text class="m" x="90" y="46">Drink Tracker · teraz</text>
+  <text class="t" x="90" y="70">Plan tygodnia 🍺</text>
+  <text class="b" x="90" y="92">Zostało Ci maksymalnie 6 piw (12,0 SU) i 3 dni z alkoholem. Zaplanuj to dobrze 📅</text>
+
+  <!-- Card 2: blisko limitu -->
+  <rect x="20" y="124" width="680" height="96" rx="20" fill="#F4F2F7"/>
+  <use href="#appicon" x="58" y="172"/>
+  <text class="m" x="90" y="154">Drink Tracker · teraz</text>
+  <text class="t" x="90" y="178">Blisko limitu 🟡</text>
+  <text class="b" x="90" y="200">Ostatnie krople 🤏 Zostało Ci mniej niż jedno piwo (1,2 SU). Trzymaj się planu!</text>
+
+  <!-- Card 3: stop -->
+  <rect x="20" y="232" width="680" height="96" rx="20" fill="#F4F2F7"/>
+  <use href="#appicon" x="58" y="280"/>
+  <text class="m" x="90" y="262">Drink Tracker · teraz</text>
+  <text class="t" x="90" y="286">Stop na ten tydzień 🛑</text>
+  <text class="b" x="90" y="308">W tym tygodniu już więcej nie pij — jesteś 1,8 SU ponad plan. Reset w poniedziałek 🔁</text>
+
+  <!-- footer: sound note -->
+  <text x="20" y="360" fill="#A8ABB8" font-size="12.5">🔊 Dźwięk powiadomień: „brzdęk kieliszków" (toast/cheers) — na wszystkich kanałach.</text>
+</svg>

@@ -11,6 +11,24 @@ Repozytorium zawiera dwa warianty:
 - **Natywna aplikacja Android (Kotlin)** – `android/`, pełne, działające odwzorowanie makiet
   w Jetpack Compose.
 
+### Podgląd
+
+Widget w trzech rozmiarach – skalowalny do 2×1 z zachowaniem wszystkich kluczowych informacji:
+
+![Widget spożycia alkoholu w rozmiarach 4x2, 2x2 i 2x1](android/docs/widget-sizes.svg)
+
+<table>
+  <tr>
+    <td align="center"><img src="android/docs/home.svg" width="240" alt="Ekran Tydzień"><br><sub><b>Tydzień</b> · widget + BAC</sub></td>
+    <td align="center"><img src="android/docs/log.svg" width="240" alt="Ekran Zaloguj"><br><sub><b>Zaloguj</b> · także wstecz</sub></td>
+    <td align="center"><img src="android/docs/settings.svg" width="240" alt="Ekran Ustawienia"><br><sub><b>Ustawienia</b> · kalkulator BAC</sub></td>
+  </tr>
+</table>
+
+Powiadomienia „planujące" tydzień, z dźwiękiem brzdęku kieliszków:
+
+![Powiadomienia z planowaniem tygodnia](android/docs/notifications.svg)
+
 ## 📱 Aplikacja Android (`android/`)
 
 W pełni funkcjonalna, natywna apka w Kotlinie odwzorowująca makiety i rozszerzająca je o:

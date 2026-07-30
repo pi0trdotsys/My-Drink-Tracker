@@ -4,6 +4,24 @@ Natywne odwzorowanie makiet z projektu TypeScript (`../src`) jako w pełni dzia�
 aplikacja w Jetpack Compose. Śledzi tygodniowe spożycie alkoholu w jednostkach
 standardowych (SU), pokazuje wykres dni, statusy limitu i skalowalny widget na ekran główny.
 
+## Podgląd
+
+Widget w trzech rozmiarach – skalowalny do 2×1 z zachowaniem wszystkich kluczowych informacji:
+
+![Widget spożycia alkoholu w rozmiarach 4x2, 2x2 i 2x1](docs/widget-sizes.svg)
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/home.svg" width="240" alt="Ekran Tydzień"><br><sub><b>Tydzień</b> · widget + BAC</sub></td>
+    <td align="center"><img src="docs/log.svg" width="240" alt="Ekran Zaloguj"><br><sub><b>Zaloguj</b> · także wstecz</sub></td>
+    <td align="center"><img src="docs/settings.svg" width="240" alt="Ekran Ustawienia"><br><sub><b>Ustawienia</b> · kalkulator BAC</sub></td>
+  </tr>
+</table>
+
+Powiadomienia „planujące" tydzień, z dźwiękiem brzdęku kieliszków:
+
+![Powiadomienia z planowaniem tygodnia](docs/notifications.svg)
+
 ## Funkcje
 
 - **Odwzorowanie makiet** – ten sam design (ciemny motyw, złoty akcent), przelicznik

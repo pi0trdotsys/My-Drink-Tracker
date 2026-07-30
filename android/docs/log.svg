@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="716" viewBox="0 0 340 716" font-family="'Segoe UI',Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="Ekran logowania trunku z wyborem daty">
+  <defs><style>text{fill:#F1F2F7;}.ey{fill:#E3A54B;font-size:9px;font-weight:600;letter-spacing:1.4px;}.mut{fill:#A8ABB8;}</style></defs>
+  <rect x="4" y="4" width="332" height="708" rx="34" fill="#0C0D12"/>
+  <rect x="10" y="10" width="320" height="696" rx="29" fill="#171922"/>
+  <text x="28" y="36" font-size="13" font-weight="600">2:22</text>
+  <g fill="#F1F2F7"><rect x="286" y="27" width="3" height="9" rx="1"/><rect x="291" y="24" width="3" height="12" rx="1"/><rect x="296" y="21" width="3" height="15" rx="1"/></g>
+  <g><rect x="304" y="24" width="20" height="11" rx="2.5" fill="none" stroke="#F1F2F7" stroke-width="1.4"/><rect x="306" y="26" width="15" height="7" rx="1" fill="#F1F2F7"/></g>
+
+  <rect x="22" y="54" width="296" height="558" rx="20" fill="#23252F" stroke="#ffffff1f"/>
+  <text x="38" y="88" font-size="19" font-weight="800">Zaloguj trunek</text>
+
+  <!-- chips -->
+  <g font-size="16">
+    <!-- Piwo (selected) -->
+    <rect x="38" y="100" width="84" height="58" rx="16" fill="#E3A54B29" stroke="#E3A54B"/>
+    <text x="50" y="126">🍺</text><text x="50" y="142" font-size="11" font-weight="600">Piwo</text><text class="mut" x="50" y="153" font-size="7.5">500 ml · 5%</text>
+    <rect x="134" y="100" width="84" height="58" rx="16" fill="#2E313D99" stroke="#ffffff1f"/>
+    <text x="146" y="126">🍷</text><text x="146" y="142" font-size="11" font-weight="600">Wino</text><text class="mut" x="146" y="153" font-size="7.5">150 ml · 12%</text>
+    <rect x="230" y="100" width="84" height="58" rx="16" fill="#2E313D99" stroke="#ffffff1f"/>
+    <text x="242" y="126">🥃</text><text x="242" y="142" font-size="11" font-weight="600">Wódka</text><text class="mut" x="242" y="153" font-size="7.5">50 ml · 40%</text>
+
+    <rect x="38" y="166" width="84" height="58" rx="16" fill="#2E313D99" stroke="#ffffff1f"/>
+    <text x="50" y="192">🥃</text><text x="50" y="208" font-size="11" font-weight="600">Whisky</text><text class="mut" x="50" y="219" font-size="7.5">50 ml · 43%</text>
+    <rect x="134" y="166" width="84" height="58" rx="16" fill="#2E313D99" stroke="#ffffff1f"/>
+    <text x="146" y="192">🍸</text><text x="146" y="208" font-size="11" font-weight="600">Gin</text><text class="mut" x="146" y="219" font-size="7.5">250 ml · 9%</text>
+    <rect x="230" y="166" width="84" height="58" rx="16" fill="#2E313D99" stroke="#ffffff1f"/>
+    <text x="242" y="192">🍹</text><text x="242" y="208" font-size="11" font-weight="600">Drink</text><text class="mut" x="242" y="219" font-size="7.5">200 ml · 14%</text>
+
+    <rect x="38" y="232" width="84" height="58" rx="16" fill="#2E313D99" stroke="#ffffff1f"/>
+    <text x="50" y="258">🍾</text><text x="50" y="274" font-size="11" font-weight="600">Prosecco</text><text class="mut" x="50" y="285" font-size="7.5">120 ml · 11%</text>
+  </g>
+
+  <!-- name field -->
+  <rect x="38" y="306" width="264" height="44" rx="10" fill="none" stroke="#E3A54B"/>
+  <rect x="52" y="300" width="86" height="12" fill="#23252F"/><text class="ey" x="54" y="309" fill="#E3A54B" letter-spacing="0">Nazwa wpisu</text>
+  <text x="54" y="333" font-size="14">Piwo</text>
+
+  <!-- volume slider -->
+  <text class="mut" x="38" y="376" font-size="11">Objętość</text><text x="302" y="376" font-size="11" font-weight="600" text-anchor="end">500 ml</text>
+  <rect x="38" y="386" width="264" height="4" rx="2" fill="#2E313D"/><rect x="38" y="386" width="173" height="4" rx="2" fill="#E3A54B"/><circle cx="211" cy="388" r="9" fill="#E3A54B"/>
+
+  <!-- abv slider -->
+  <text class="mut" x="38" y="418" font-size="11">Zawartość alkoholu</text><text x="302" y="418" font-size="11" font-weight="600" text-anchor="end">5,0%</text>
+  <rect x="38" y="428" width="264" height="4" rx="2" fill="#2E313D"/><rect x="38" y="428" width="20" height="4" rx="2" fill="#E3A54B"/><circle cx="56" cy="430" r="9" fill="#E3A54B"/>
+
+  <!-- Kiedy -->
+  <text class="mut" x="38" y="472" font-size="11">Kiedy</text>
+  <rect x="182" y="456" width="120" height="30" rx="14" fill="#2E313D99" stroke="#E3A54B"/>
+  <circle cx="200" cy="471" r="6" fill="none" stroke="#E3A54B" stroke-width="1.4"/><line x1="200" y1="471" x2="200" y2="467" stroke="#E3A54B" stroke-width="1.4"/><line x1="200" y1="471" x2="203" y2="473" stroke="#E3A54B" stroke-width="1.4"/>
+  <text x="214" y="475" font-size="12" font-weight="500">28 lip, 06:17</text>
+
+  <!-- converter -->
+  <rect x="38" y="500" width="264" height="72" rx="18" fill="#2E313D99"/>
+  <text class="ey" x="56" y="528">PRZELICZNIK</text>
+  <text x="56" y="558" font-size="28" font-weight="800">2,0 SU</text>
+  <rect x="196" y="522" width="92" height="34" rx="17" fill="#E3A54B"/><text x="242" y="544" font-size="13" font-weight="600" fill="#2A2010" text-anchor="middle">Dodaj wpis</text>
+
+  <!-- bottom nav (Zaloguj active) -->
+  <rect x="10" y="648" width="320" height="58" fill="#1d1f29"/>
+  <path d="M74 671 l7 -6 l7 6 v9 h-14 z" fill="#A8ABB8"/>
+  <text x="81" y="702" font-size="10" class="mut" text-anchor="middle">Tydzień</text>
+  <rect x="135" y="662" width="70" height="30" rx="15" fill="#E3A54B"/>
+  <g stroke="#2A2010" stroke-width="2"><line x1="163" y1="677" x2="177" y2="677"/><line x1="170" y1="670" x2="170" y2="684"/></g>
+  <text x="170" y="702" font-size="10" font-weight="600" fill="#E3A54B" text-anchor="middle">Zaloguj</text>
+  <circle cx="260" cy="675" r="6" fill="none" stroke="#A8ABB8" stroke-width="1.6"/><circle cx="260" cy="675" r="2" fill="#A8ABB8"/>
+  <text x="260" y="702" font-size="10" class="mut" text-anchor="middle">Ustawienia</text>
+</svg>
