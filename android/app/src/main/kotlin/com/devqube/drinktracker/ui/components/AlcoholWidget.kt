@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -31,10 +32,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.devqube.drinktracker.data.Status
+import com.devqube.drinktracker.data.StatusDetails
+import com.devqube.drinktracker.data.Tool
 import com.devqube.drinktracker.data.WeekData
 import com.devqube.drinktracker.data.fmt
 import com.devqube.drinktracker.data.statusDetails
@@ -117,12 +121,17 @@ private fun Small2x1(week: WeekData, status: Status, shell: Modifier) {
                     )
                 }
                 Text(
-                    "${d.drinkingDays}/${week.dayLimit} dni · " +
-                        if (status == Status.OVER && d.overUnits > 0) "+${fmt(d.overUnits)} SU" else statusLabel(status),
+                    LocalVoice.current.daysLabel(d.drinkingDays, week.dayLimit, long = false) + " · " +
+                        if (status == Status.OVER && d.overUnits > 0) "+${fmt(d.overUnits)} SU" else LocalVoice.current.statusLabel(status),
                     fontSize = 11.sp,
+                    maxLines = 1,
                     color = statusCol,
                     modifier = Modifier.padding(top = 3.dp),
                 )
+            }
+            LocalVoice.current.tool(status)?.let {
+                ToolIcon(it, 34.dp)
+                Spacer(Modifier.width(8.dp))
             }
             Box(Modifier.width(70.dp)) {
                 Bars(week, status, height = 32.dp, showLabels = false)
@@ -138,16 +147,16 @@ private fun Medium2x2(week: WeekData, status: Status, shell: Modifier) {
     Column(shell.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
-                Text("TEN TYDZIEŃ", style = MaterialTheme.typography.labelSmall, color = colors.muted)
+                Text(LocalVoice.current.weekHeader, style = MaterialTheme.typography.labelSmall, color = headerColor())
                 ShimmerTotal(d.total, week.unitLimit.toInt(), status, big = false)
             }
-            StatusDot(status)
+            ToolOrDot(status, 30.dp)
         }
         Bars(week, status, height = 64.dp, showLabels = true)
-        LimitBar(d.ratio, status)
+        MeterBar(d, status)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("${d.drinkingDays}/${week.dayLimit} dni", fontSize = 11.sp, color = colors.muted)
-            Text(statusLabel(status), fontSize = 11.sp, color = statusColor(status))
+            Text(LocalVoice.current.daysLabel(d.drinkingDays, week.dayLimit, long = false), fontSize = 11.sp, color = colors.muted)
+            Text(LocalVoice.current.statusLabel(status), fontSize = 11.sp, color = statusColor(status))
         }
         if (status != Status.OK) LocalVoice.current.alert(d).let { (h, m) -> AlertBox(status, h, m, d.reasons, compact = true) }
     }
@@ -159,8 +168,14 @@ private fun Large4x2(week: WeekData, status: Status, shell: Modifier) {
     val colors = LocalDrinkColors.current
     Column(shell.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("TEN TYDZIEŃ", style = MaterialTheme.typography.labelSmall, color = colors.muted)
-            Text(week.range, fontSize = 11.sp, color = colors.muted)
+            Text(LocalVoice.current.weekHeader, style = MaterialTheme.typography.labelSmall, color = headerColor())
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(week.range, fontSize = 11.sp, color = colors.muted)
+                LocalVoice.current.tool(status)?.let {
+                    Spacer(Modifier.width(8.dp))
+                    ToolIcon(it, 30.dp)
+                }
+            }
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Column {
@@ -172,9 +187,9 @@ private fun Large4x2(week: WeekData, status: Status, shell: Modifier) {
                 Bars(week, status, height = 88.dp, showLabels = true)
             }
         }
-        LimitBar(d.ratio, status)
+        MeterBar(d, status)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("${d.drinkingDays}/${week.dayLimit} dni z alkoholem", fontSize = 12.sp, color = colors.muted)
+            Text(LocalVoice.current.daysLabel(d.drinkingDays, week.dayLimit, long = true), fontSize = 12.sp, color = colors.muted)
             StatusPill(status)
         }
         if (status != Status.OK) LocalVoice.current.alert(d).let { (h, m) -> AlertBox(status, h, m, d.reasons, compact = false) }
@@ -323,7 +338,7 @@ private fun StatusPill(status: Status) {
             .padding(horizontal = 12.dp, vertical = 5.dp),
     ) {
         Text(
-            statusLabel(status),
+            LocalVoice.current.statusLabel(status),
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             color = when (status) {
@@ -372,4 +387,38 @@ fun AlertBox(status: Status, headline: String, message: String, reasons: List<St
             }
         }
     }
+}
+
+/** Nagłówek karty: różowy w motywie Grażyna, wyciszony w klasycznym. */
+@Composable
+private fun headerColor(): Color =
+    if (LocalDrinkColors.current.leopard) MaterialTheme.colorScheme.primary else LocalDrinkColors.current.muted
+
+/** Poziom wkurwu Grażyny (pasek + podpis) albo zwykły pasek limitu w motywie klasycznym. */
+@Composable
+private fun MeterBar(d: StatusDetails, status: Status) {
+    val meter = LocalVoice.current.meter(d)
+    if (meter == null) {
+        LimitBar(d.ratio, status)
+        return
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        LimitBar(meter.percent / 100.0, status)
+        Text("Wkurw Grażyny: ${meter.percent}% · ${meter.mood}", fontSize = 11.sp, color = LocalDrinkColors.current.muted)
+    }
+}
+
+@Composable
+private fun ToolIcon(tool: Tool, size: androidx.compose.ui.unit.Dp) {
+    Image(
+        painter = painterResource(toolDrawable(tool)),
+        contentDescription = toolName(tool),
+        modifier = Modifier.size(size),
+    )
+}
+
+@Composable
+private fun ToolOrDot(status: Status, size: androidx.compose.ui.unit.Dp) {
+    val tool = LocalVoice.current.tool(status)
+    if (tool != null) ToolIcon(tool, size) else StatusDot(status)
 }

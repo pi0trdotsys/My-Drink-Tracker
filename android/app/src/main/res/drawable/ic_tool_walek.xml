@@ -1,0 +1,20 @@
+<!-- Wałek do ciasta (motyw Grażyna: status „Przekroczono”). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <group android:pivotX="24" android:pivotY="24" android:rotation="-40">
+        <!-- rączki -->
+        <path android:fillColor="#A8703A"
+            android:pathData="M1,21.5 C1,20.1 2.1,19 3.5,19 L10,19 L10,29 L3.5,29 C2.1,29 1,27.9 1,26.5 Z" />
+        <path android:fillColor="#A8703A"
+            android:pathData="M38,19 L44.5,19 C45.9,19 47,20.1 47,21.5 L47,26.5 C47,27.9 45.9,29 44.5,29 L38,29 Z" />
+        <!-- wałek -->
+        <path android:fillColor="#E0A866"
+            android:pathData="M10,15.5 C10,14.1 11.1,13 12.5,13 L35.5,13 C36.9,13 38,14.1 38,15.5 L38,32.5 C38,33.9 36.9,35 35.5,35 L12.5,35 C11.1,35 10,33.9 10,32.5 Z" />
+        <!-- połysk i słoje -->
+        <path android:fillColor="#F5CF97" android:pathData="M12,16 L36,16 L36,19 L12,19 Z" />
+        <path android:fillColor="#C98B4B" android:pathData="M12,29 L36,29 L36,30.5 L12,30.5 Z" />
+    </group>
+</vector>

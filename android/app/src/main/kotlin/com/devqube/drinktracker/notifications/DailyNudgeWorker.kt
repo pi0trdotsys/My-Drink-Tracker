@@ -1,6 +1,7 @@
 package com.devqube.drinktracker.notifications
 
 import android.content.Context
+import androidx.glance.appwidget.updateAll
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -11,6 +12,7 @@ import com.devqube.drinktracker.data.Store
 import com.devqube.drinktracker.data.decideNudge
 import com.devqube.drinktracker.data.nudgeInputFor
 import com.devqube.drinktracker.data.voiceFor
+import com.devqube.drinktracker.widget.AlcoholGlanceWidget
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
@@ -23,6 +25,9 @@ import java.util.concurrent.TimeUnit
 class DailyNudgeWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        // Co godzinę odświeżamy widget: rotacja tekstów i komentarze zależne od pory dnia.
+        runCatching { AlcoholGlanceWidget().updateAll(applicationContext) }
+
         val store = Store.get(applicationContext)
         val settings = store.snapshotSettings()
         if (!settings.notificationsEnabled || !settings.dailyNudges) return Result.success()
@@ -34,7 +39,7 @@ class DailyNudgeWorker(context: Context, params: WorkerParameters) : CoroutineWo
             ?: return Result.success()
         if (!store.claimNudgeSlot("${now.toLocalDate()}|${slot.name}")) return Result.success()
 
-        val (title, body) = voiceFor(settings.theme).nudge(nudge)
+        val (title, body) = voiceFor(settings.theme, settings.vulgarity).nudge(nudge)
         Notifier.notifyNudge(applicationContext, title, body, settings.theme)
         return Result.success()
     }

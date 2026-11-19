@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devqube.drinktracker.data.AppTheme
 import com.devqube.drinktracker.data.DrinkType
 import com.devqube.drinktracker.data.Sex
+import com.devqube.drinktracker.data.Vulgarity
 import com.devqube.drinktracker.data.fmt
 import com.devqube.drinktracker.data.toUnits
 import com.devqube.drinktracker.ui.AppViewModel
@@ -150,6 +151,8 @@ fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
 
         ThemeCard(
             current = settings.theme,
+            vulgarity = settings.vulgarity,
+            onVulgarity = { v -> vm.updateSettings { it.copy(vulgarity = v) } },
             onPick = { theme ->
                 // Wejście w Grażynę włącza też jej gderanie w ciągu dnia; powrót niczego nie wyłącza.
                 vm.updateSettings { it.copy(theme = theme, dailyNudges = it.dailyNudges || theme == AppTheme.GRAZYNA) }
@@ -287,7 +290,12 @@ private fun AddTypeDialog(onDismiss: () -> Unit, onConfirm: (DrinkType) -> Unit)
 }
 
 @Composable
-private fun ThemeCard(current: AppTheme, onPick: (AppTheme) -> Unit) {
+private fun ThemeCard(
+    current: AppTheme,
+    vulgarity: Vulgarity,
+    onVulgarity: (Vulgarity) -> Unit,
+    onPick: (AppTheme) -> Unit,
+) {
     val colors = LocalDrinkColors.current
     var confirmGrazyna by remember { mutableStateOf(false) }
 
@@ -320,6 +328,28 @@ private fun ThemeCard(current: AppTheme, onPick: (AppTheme) -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
             color = colors.muted,
         )
+        if (current == AppTheme.GRAZYNA) {
+            Spacer(Modifier.height(14.dp))
+            Text("Poziom wulgarności", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Vulgarity.entries.forEach { v ->
+                    SegChip(
+                        label = v.label,
+                        selected = vulgarity == v,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onVulgarity(v) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                if (vulgarity == Vulgarity.MAX) "Wszystkie przekleństwa: „ja pierdolę”, „najebany”, „w pizdu”…"
+                else "Ksywki i „kurwa”, bez najcięższych przekleństw.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.muted,
+            )
+        }
     }
 
     if (confirmGrazyna) {
@@ -329,7 +359,8 @@ private fun ThemeCard(current: AppTheme, onPick: (AppTheme) -> Unit) {
             text = {
                 Text(
                     "Eksperymentalny motyw 18+ z wulgaryzmami i memicznym humorem. Zmienia wygląd, teksty, " +
-                        "dźwięki i widget oraz włącza przypomnienia w ciągu dnia. Możesz wrócić w każdej chwili."
+                        "dźwięki i widget oraz włącza przypomnienia w ciągu dnia. Domyślnie bez hamulców – " +
+                        "poziom wulgarności możesz złagodzić w Ustawieniach. Wrócić możesz w każdej chwili."
                 )
             },
             confirmButton = {

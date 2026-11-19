@@ -33,6 +33,7 @@ class Store(private val context: Context) {
         val LAST_NOTIFIED_STATUS = stringPreferencesKey("last_notified_status")
         val THEME = stringPreferencesKey("theme")
         val DAILY_NUDGES = booleanPreferencesKey("daily_nudges")
+        val VULGARITY = stringPreferencesKey("vulgarity")
         val SENT_NUDGES = stringPreferencesKey("sent_nudges")
     }
 
@@ -46,6 +47,7 @@ class Store(private val context: Context) {
         sex = runCatching { Sex.valueOf(this[Keys.SEX] ?: "MALE") }.getOrDefault(Sex.MALE),
         theme = runCatching { AppTheme.valueOf(this[Keys.THEME] ?: "CLASSIC") }.getOrDefault(AppTheme.CLASSIC),
         dailyNudges = this[Keys.DAILY_NUDGES] ?: false,
+        vulgarity = runCatching { Vulgarity.valueOf(this[Keys.VULGARITY] ?: "MAX") }.getOrDefault(Vulgarity.MAX),
     )
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { it.toSettings() }
@@ -108,6 +110,7 @@ class Store(private val context: Context) {
             p[Keys.SEX] = next.sex.name
             p[Keys.THEME] = next.theme.name
             p[Keys.DAILY_NUDGES] = next.dailyNudges
+            p[Keys.VULGARITY] = next.vulgarity.name
         }
     }
 

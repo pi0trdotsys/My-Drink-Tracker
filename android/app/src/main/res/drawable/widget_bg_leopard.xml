@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tło widgetu w motywie Grażyna: kafelek panterki powtarzany na całej powierzchni. -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/leopard_tile"
+    android:tileMode="repeat"
+    android:dither="true" />

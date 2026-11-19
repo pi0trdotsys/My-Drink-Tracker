@@ -49,6 +49,12 @@ Powiadomienia „planujące" tydzień, z dźwiękiem brzdęku kieliszków:
 - **Motyw „Grażyna” 🍳 (eksperymentalny, 18+)** – memiczna, wulgarna „wkurzona żona”: panterkowy
   wygląd ze szminkowym różem, własne teksty w aplikacji, powiadomieniach i na widgecie
   („Dzisiaj nie waż się pić!”), dźwięki patelni i kapcia. Włączany w Ustawieniach po potwierdzeniu.
+  - Kilkadziesiąt ksywek w wołaczu (moczymordo, ochlapusie, łajzo, gąbko, Januszu…), stany upojenia
+    i przekleństwa losowane w tekstach, powiadomieniach i na widgecie.
+  - Poziom wulgarności: **Bez hamulców** (domyślnie) albo **Ostry** (bez najcięższych słów).
+  - Widget w panterce z różową ramką, ikoną narzędzia (kapeć → patelnia → wałek), paskiem
+    „Wkurw Grażyny”, rotującymi tekstami zależnymi od pory dnia (kac rano, pokusa po 17:00,
+    „odstaw butelkę” wieczorem), dymkiem „Grażyna mówi:” i przyciskiem „+ Przyznaję się” (4×2).
 - **Widget na ekran główny** (Glance) – skalowalny; czyta te same dane, klik otwiera aplikację.
 - **Fancy smaczek** – złoty „shimmer" przesuwający się po głównej liczbie, rotujące dowcipne
   hasła zależne od statusu, licznik trzeźwych dni z odznakami (🌱⭐🔥🥇🏆) oraz powiadomienia

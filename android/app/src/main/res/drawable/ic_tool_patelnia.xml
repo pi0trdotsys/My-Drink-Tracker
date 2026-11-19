@@ -1,0 +1,24 @@
+<!-- Patelnia z jajkiem (motyw Grażyna: status „Uwaga”). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- rączka -->
+    <path android:fillColor="#2B2B30"
+        android:pathData="M30.5,28.5 L44,42 C45,43 45,44.5 44,45.5 C43,46.5 41.5,46.5 40.5,45.5 L27,32 Z" />
+    <!-- rant -->
+    <path android:fillColor="#6E6E78"
+        android:pathData="M19,3 m-16,16 a16,16 0,1 0,32 0 a16,16 0,1 0,-32 0" />
+    <!-- dno -->
+    <path android:fillColor="#34343B"
+        android:pathData="M19,5.5 m-13.5,13.5 a13.5,13.5 0,1 0,27 0 a13.5,13.5 0,1 0,-27 0" />
+    <!-- białko -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M12,15 C13,10.5 18.5,9.5 22,11.5 C26.5,10.5 28.5,15.5 26.5,19.5 C28,23.5 24.5,27.5 20,26.5 C15.5,28 11,25 12,21 C9.5,19 10,16 12,15 Z" />
+    <!-- żółtko -->
+    <path android:fillColor="#FFB020"
+        android:pathData="M19.5,18.5 m-4,0 a4,4 0,1 0,8 0 a4,4 0,1 0,-8 0" />
+    <path android:fillColor="#FFE08A"
+        android:pathData="M18.2,17.2 m-1.2,0 a1.2,1.2 0,1 0,2.4 0 a1.2,1.2 0,1 0,-2.4 0" />
+</vector>

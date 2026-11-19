@@ -30,6 +30,15 @@ enum class AppTheme(val label: String) {
     GRAZYNA("Grażyna 🍳"),
 }
 
+/** Jak mocno przeklina Grażyna. */
+enum class Vulgarity(val label: String) {
+    /** Ksywki i „kurwa”, bez najcięższych przekleństw. */
+    SHARP("Ostry"),
+
+    /** Wszystko: „ja pierdolę”, „najebany”, „w pizdu” itd. */
+    MAX("Bez hamulców"),
+}
+
 /** Wszystkie ustawienia użytkownika. */
 data class AppSettings(
     val unitLimit: Double = 14.0,
@@ -40,6 +49,8 @@ data class AppSettings(
     val weightKg: Double = 80.0,
     val sex: Sex = Sex.MALE,
     val theme: AppTheme = AppTheme.CLASSIC,
+    /** Poziom wulgarności motywu Grażyna (domyślnie maksymalny). */
+    val vulgarity: Vulgarity = Vulgarity.MAX,
     /** Sensowne przypomnienia w ciągu dnia (południe / 17:00 / wieczór). */
     val dailyNudges: Boolean = false,
 ) {

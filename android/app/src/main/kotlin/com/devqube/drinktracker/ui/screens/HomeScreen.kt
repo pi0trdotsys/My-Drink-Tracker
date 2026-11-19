@@ -70,7 +70,8 @@ fun HomeScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 Text(Fancy.emblem(details.status), fontSize = 14.sp)
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    voice.tagline(details.status, streak),
+                    // Zmienia się co godzinę i po każdym wpisie (wcześniej ziarnem był licznik trzeźwych dni, więc hasło stało w miejscu).
+                    voice.tagline(details.status, (System.currentTimeMillis() / 3_600_000L).toInt() * 31 + entries.size),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.muted,
                 )

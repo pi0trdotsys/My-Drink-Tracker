@@ -4,10 +4,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.devqube.drinktracker.data.AppTheme
 import com.devqube.drinktracker.data.Voice
+import com.devqube.drinktracker.data.Vulgarity
 import com.devqube.drinktracker.data.voiceFor
 
 /** Komplet kolorów motywu – używany przez aplikację i (jako ARGB) przez widget. */
@@ -82,6 +84,7 @@ val LocalVoice = staticCompositionLocalOf<Voice> { voiceFor(AppTheme.CLASSIC) }
 @Composable
 fun DrinkTrackerTheme(
     theme: AppTheme = AppTheme.CLASSIC,
+    vulgarity: Vulgarity = Vulgarity.MAX,
     content: @Composable () -> Unit,
 ) {
     // Aplikacja jest zaprojektowana jako ciemna, niezależnie od ustawień systemu.
@@ -99,7 +102,8 @@ fun DrinkTrackerTheme(
         outline = p.border,
     )
     val colors = DrinkColors(p.surface2, p.muted, p.ok, p.warn, p.over, p.border, p.leopard)
-    CompositionLocalProvider(LocalDrinkColors provides colors, LocalVoice provides voiceFor(theme)) {
+    val voice = remember(theme, vulgarity) { voiceFor(theme, vulgarity) }
+    CompositionLocalProvider(LocalDrinkColors provides colors, LocalVoice provides voice) {
         MaterialTheme(colorScheme = scheme, typography = DrinkTypography, content = content)
     }
 }

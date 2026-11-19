@@ -27,7 +27,7 @@ class WeeklySummaryWorker(context: Context, params: WorkerParameters) : Coroutin
         val week = buildWeek(entries, settings)
         val details = statusDetails(week)
         val streak = Fancy.dryStreak(entries)
-        val (title, body) = voiceFor(settings.theme).weeklyMessage(details, streak)
+        val (title, body) = voiceFor(settings.theme, settings.vulgarity).weeklyMessage(details, streak)
         Notifier.notifyWeekly(applicationContext, title, body, settings.theme)
         return Result.success()
     }

@@ -13,6 +13,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,8 +32,10 @@ private enum class Tab(val label: String, val icon: ImageVector) {
 }
 
 @Composable
-fun AppRoot(vm: AppViewModel) {
+fun AppRoot(vm: AppViewModel, openLogRequests: Int = 0) {
     var tab by remember { mutableStateOf(Tab.HOME) }
+    // Prośba z widgetu („+ Przyznaję się” / „+ Dodaj”) – przejdź na ekran logowania.
+    LaunchedEffect(openLogRequests) { if (openLogRequests > 0) tab = Tab.LOG }
     val colors = LocalDrinkColors.current
 
     Scaffold(
