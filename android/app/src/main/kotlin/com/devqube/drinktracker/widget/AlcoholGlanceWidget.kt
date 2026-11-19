@@ -3,6 +3,8 @@ package com.devqube.drinktracker.widget
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -40,6 +42,8 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.devqube.drinktracker.MainActivity
 import com.devqube.drinktracker.R
+import com.devqube.drinktracker.data.AppSettings
+import com.devqube.drinktracker.data.DrinkEntry
 import com.devqube.drinktracker.data.Fancy
 import com.devqube.drinktracker.data.Meter
 import com.devqube.drinktracker.data.Status
@@ -92,57 +96,72 @@ class AlcoholGlanceWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val store = Store.get(context)
-        val settings = store.snapshotSettings()
-        val entries = store.snapshotEntries()
-        val week = buildWeek(entries, settings)
-        val details = statusDetails(week)
-        val streak = Fancy.dryStreak(entries)
-        val palette = paletteFor(settings.theme)
-        val voice = voiceFor(settings.theme, settings.vulgarity)
-
-        val now = ZonedDateTime.now()
-        val today = now.toLocalDate()
-        val moment = momentOf(
-            hour = now.hour,
-            unitsToday = unitsOn(entries, today, settings.gramsPerUnit, now.zone),
-            unitsYesterday = unitsOn(entries, today.minusDays(1), settings.gramsPerUnit, now.zone),
-        )
-        // Teksty zmieniają się co godzinę (worker przypomnień odświeża widget) i po każdym wpisie.
-        val seed = (System.currentTimeMillis() / 3_600_000L).toInt() * 31 + entries.size
-        val wm = WidgetMoment(
-            status = details.status,
-            streak = streak,
-            beersLeft = Fancy.beersLeft(details.remainingUnits, toUnits(500.0, 5.0, settings.gramsPerUnit)),
-            moment = moment,
-            seed = seed,
-        )
-
-        val state = WidgetState(
-            total = details.total,
-            limit = week.unitLimit.toInt(),
-            drinkingDays = details.drinkingDays,
-            dayLimit = week.dayLimit,
-            status = details.status,
-            overUnits = details.overUnits,
-            ratio = details.ratio,
-            dayUnits = week.days.map { it.units },
-            dailyRef = if (week.dayLimit > 0) week.unitLimit / week.dayLimit else week.unitLimit,
-            header = voice.weekHeader,
-            statusText = voice.statusLabel(details.status),
-            daysText = voice.daysLabel(details.drinkingDays, week.dayLimit, long = false),
-            line = voice.widgetLine(wm),
-            speech = voice.widgetSpeech(wm),
-            speechTitle = voice.speechTitle,
-            meter = voice.meter(details),
-            tool = voice.tool(details.status),
-            quickAdd = voice.quickAdd,
-            leopard = palette.leopard,
-        )
+        val initialSettings = store.snapshotSettings()
+        val initialEntries = store.snapshotEntries()
 
         provideContent {
+            // provideGlance wykonuje się raz na sesję widgetu – dane subskrybujemy w treści, żeby każda
+            // zmiana (nowy wpis, motyw, limit) od razu przerysowała widget. Wcześniej stan był liczony
+            // tylko raz, więc przy żywej sesji widget pokazywał nieaktualne dane (np. stary motyw).
+            val settings by store.settings.collectAsState(initial = initialSettings)
+            val entries by store.entries.collectAsState(initial = initialEntries)
+            val (state, palette) = buildWidgetState(settings, entries)
             GlanceTheme { WidgetBody(state, palette) }
         }
     }
+}
+
+/** Liczy wszystko, co widget pokazuje, dla bieżących danych i chwili [nowMillis]. */
+private fun buildWidgetState(
+    settings: AppSettings,
+    entries: List<DrinkEntry>,
+    nowMillis: Long = System.currentTimeMillis(),
+): Pair<WidgetState, Palette> {
+    val week = buildWeek(entries, settings)
+    val details = statusDetails(week)
+    val streak = Fancy.dryStreak(entries)
+    val palette = paletteFor(settings.theme)
+    val voice = voiceFor(settings.theme, settings.vulgarity)
+
+    val now = ZonedDateTime.now()
+    val today = now.toLocalDate()
+    val moment = momentOf(
+        hour = now.hour,
+        unitsToday = unitsOn(entries, today, settings.gramsPerUnit, now.zone),
+        unitsYesterday = unitsOn(entries, today.minusDays(1), settings.gramsPerUnit, now.zone),
+    )
+    // Teksty zmieniają się co godzinę (worker przypomnień odświeża widget) i po każdym wpisie.
+    val seed = (nowMillis / 3_600_000L).toInt() * 31 + entries.size
+    val wm = WidgetMoment(
+        status = details.status,
+        streak = streak,
+        beersLeft = Fancy.beersLeft(details.remainingUnits, toUnits(500.0, 5.0, settings.gramsPerUnit)),
+        moment = moment,
+        seed = seed,
+    )
+
+    val state = WidgetState(
+        total = details.total,
+        limit = week.unitLimit.toInt(),
+        drinkingDays = details.drinkingDays,
+        dayLimit = week.dayLimit,
+        status = details.status,
+        overUnits = details.overUnits,
+        ratio = details.ratio,
+        dayUnits = week.days.map { it.units },
+        dailyRef = if (week.dayLimit > 0) week.unitLimit / week.dayLimit else week.unitLimit,
+        header = voice.weekHeader,
+        statusText = voice.statusLabel(details.status),
+        daysText = voice.daysLabel(details.drinkingDays, week.dayLimit, long = false),
+        line = voice.widgetLine(wm),
+        speech = voice.widgetSpeech(wm),
+        speechTitle = voice.speechTitle,
+        meter = voice.meter(details),
+        tool = voice.tool(details.status),
+        quickAdd = voice.quickAdd,
+        leopard = palette.leopard,
+    )
+    return state to palette
 }
 
 private fun statusColor(status: Status, p: Palette): Color = when (status) {
@@ -154,11 +173,29 @@ private fun statusColor(status: Status, p: Palette): Color = when (status) {
 private fun WidgetState.statusLine() =
     "$daysText · " + if (status == Status.OVER && overUnits > 0) "+${fmt(overUnits)} SU" else statusText
 
+/** Wersja dla 2×2: „1/4 dni · status” – krótsza od pełnej, żeby zmieściła się w wąskiej kolumnie. */
+private fun WidgetState.mediumStatusLine() =
+    "$drinkingDays/$dayLimit dni · " + if (status == Status.OVER && overUnits > 0) "+${fmt(overUnits)} SU" else statusText
+
 /** Wersja dla 2×1: same liczby dni, żeby zmieścił się cały status. */
 private fun WidgetState.compactStatusLine() =
     "$drinkingDays/$dayLimit · " + if (status == Status.OVER && overUnits > 0) "+${fmt(overUnits)} SU" else statusText
 
 private val PAD = 12.dp
+
+/** Przybliżona wysokość jednej linii tekstu 10,5 sp w dymku i stała część dymka (tytuł + odstępy), w dp. */
+private const val LINE = 14f
+private const val BUBBLE_CHROME = 26f
+
+/** Średnia szerokość znaku tekstu 10,5 sp (dp) i wewnętrzne marginesy dymka – do szacowania łamania linii. */
+private const val CHAR_WIDTH = 5.6f
+private const val BUBBLE_PADDING = 16f
+
+/** Ile linii zajmie [text] w dymku o szerokości [width] (szacunek z zapasem). */
+private fun linesNeeded(text: String, width: Dp): Int {
+    val perLine = ((width.value - BUBBLE_PADDING) / CHAR_WIDTH).toInt().coerceAtLeast(1)
+    return (text.length + perLine - 1) / perLine
+}
 
 @Composable
 private fun WidgetBody(s: WidgetState, p: Palette) {
@@ -189,7 +226,7 @@ private fun WidgetBody(s: WidgetState, p: Palette) {
         when {
             compact -> Compact(s, p, inner, size.height)
             large -> Large(s, p, inner, contentWidth, context)
-            else -> Medium(s, p, inner, contentWidth, size.width, size.height)
+            else -> Medium(s, p, inner, contentWidth, size.height - PAD * 2 - frame * 2, context)
         }
     }
 }
@@ -209,23 +246,43 @@ private fun Compact(s: WidgetState, p: Palette, modifier: GlanceModifier, height
     }
 }
 
+/**
+ * 2×2 – pełna zawartość jak w 4×2, ułożona w jednej kolumnie: nagłówek z ikoną, liczba z przyciskiem „+”,
+ * status, słupki, poziom wkurwu i dymek z komentarzem. Dymek dostaje tyle linii, ile zmieści się
+ * w dostępnej wysokości; dłuższa wypowiedź trafia do niego tylko, jeśli zmieści się bez ucięcia.
+ */
 @Composable
-private fun Medium(s: WidgetState, p: Palette, modifier: GlanceModifier, contentWidth: Dp, width: Dp, height: Dp) {
+private fun Medium(s: WidgetState, p: Palette, modifier: GlanceModifier, contentWidth: Dp, contentHeight: Dp, context: Context) {
+    // Szacunkowe wysokości stałych elementów (dp): nagłówek, liczba, status, słupki, pasek (+ podpis).
+    val fixed = 22 + 30 + 14 + (4 + 22) + (4 + 6) + (if (s.meter != null) 15 else 0)
+    val left = contentHeight.value - fixed - 6
+    val lines = ((left - BUBBLE_CHROME) / LINE).toInt().coerceIn(0, 4)
+
     Column(modifier) {
-        Header(s, p, 24.dp)
-        NumberRow(s, p, 26.sp)
-        Text(s.statusLine(), style = textStyle(statusColor(s.status, p), 11.sp, bold = true), maxLines = 1)
-        if (width >= 180.dp && height >= 125.dp) {
-            Spacer(GlanceModifier.height(6.dp))
-            MiniBars(s, p, 28)
+        Header(s, p, 22.dp)
+        Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(GlanceModifier.defaultWeight()) { NumberRow(s, p, 24.sp) }
+            PlusButton(s, p, context)
         }
-        if (height >= 140.dp) {
-            Spacer(GlanceModifier.height(6.dp))
-            MeterOrLimit(s, p, contentWidth)
-        }
-        if (height >= 175.dp) {
-            Spacer(GlanceModifier.height(4.dp))
-            Text(s.line, style = textStyle(p.muted, 11.sp), maxLines = 1)
+        Text(s.mediumStatusLine(), style = textStyle(statusColor(s.status, p), 11.sp, bold = true), maxLines = 1)
+        Spacer(GlanceModifier.height(4.dp))
+        MiniBars(s, p, 22)
+        Spacer(GlanceModifier.height(4.dp))
+        MeterOrLimit(s, p, contentWidth)
+        when {
+            lines >= 1 -> {
+                Spacer(GlanceModifier.height(6.dp))
+                SpeechBubble(
+                    s, p, GlanceModifier.fillMaxWidth(),
+                    // Dłuższa wypowiedź tylko wtedy, gdy zmieści się w całości – inaczej krótka zaczepka (bez ucinania).
+                    text = if (linesNeeded(s.speech, contentWidth) <= lines) s.speech else s.line,
+                    maxLines = lines,
+                )
+            }
+            left >= LINE -> {
+                Spacer(GlanceModifier.height(4.dp))
+                Text(s.line, style = textStyle(p.muted, 10.5.sp), maxLines = 1)
+            }
         }
     }
 }
@@ -263,6 +320,21 @@ private fun Large(s: WidgetState, p: Palette, modifier: GlanceModifier, contentW
 }
 
 // --- Elementy ---
+
+/** Okrągły przycisk „+” (2×2) – otwiera ekran logowania, tak jak „+ Przyznaję się” w 4×2. */
+@Composable
+private fun PlusButton(s: WidgetState, p: Palette, context: Context) {
+    Box(
+        GlanceModifier
+            .size(28.dp)
+            .cornerRadius(14.dp)
+            .background(p.primary)
+            .clickable(actionStartActivity(MainActivity.logIntent(context))),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("+", style = textStyle(p.onPrimary, 18.sp, bold = true))
+    }
+}
 
 private fun textStyle(color: Color, size: TextUnit, bold: Boolean = false) =
     TextStyle(color = ColorProvider(color), fontSize = size, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal)
@@ -320,7 +392,7 @@ private fun MeterOrLimit(s: WidgetState, p: Palette, width: Dp) {
 }
 
 @Composable
-private fun SpeechBubble(s: WidgetState, p: Palette, modifier: GlanceModifier) {
+private fun SpeechBubble(s: WidgetState, p: Palette, modifier: GlanceModifier, text: String = s.speech, maxLines: Int = 4) {
     Column(
         modifier
             .cornerRadius(12.dp)
@@ -328,7 +400,7 @@ private fun SpeechBubble(s: WidgetState, p: Palette, modifier: GlanceModifier) {
             .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
         s.speechTitle?.let { Text(it, style = textStyle(p.primary, 10.sp, bold = true), maxLines = 1) }
-        Text(s.speech, style = textStyle(p.foreground, 11.sp), maxLines = 4)
+        Text(text, style = textStyle(p.foreground, 10.5.sp), maxLines = maxLines)
     }
 }
 
