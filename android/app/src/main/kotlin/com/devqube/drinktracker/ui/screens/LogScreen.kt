@@ -58,6 +58,7 @@ import com.devqube.drinktracker.ui.components.Card
 import com.devqube.drinktracker.ui.components.Eyebrow
 import com.devqube.drinktracker.ui.components.LabeledSlider
 import com.devqube.drinktracker.ui.theme.LocalDrinkColors
+import com.devqube.drinktracker.ui.theme.LocalVoice
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -143,7 +144,7 @@ fun LogScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Card {
-            Text("Zaloguj trunek", style = MaterialTheme.typography.headlineSmall)
+            Text(LocalVoice.current.logTitle, style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(14.dp))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -237,13 +238,13 @@ fun LogScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                         }
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {
-                    Text("Dodaj wpis", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold)
+                    Text(LocalVoice.current.addButton, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
 
         Card {
-            Eyebrow("Ostatnie wpisy")
+            Eyebrow(LocalVoice.current.recentTitle)
             Spacer(Modifier.height(8.dp))
             if (entries.isEmpty()) {
                 Text("Brak wpisów w tym tygodniu. Dodaj pierwszy trunek powyżej.", color = colors.muted, style = MaterialTheme.typography.bodyMedium)

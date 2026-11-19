@@ -31,6 +31,9 @@ class Store(private val context: Context) {
         val ENTRIES = stringPreferencesKey("entries_json")
         val CUSTOM_TYPES = stringPreferencesKey("custom_types_json")
         val LAST_NOTIFIED_STATUS = stringPreferencesKey("last_notified_status")
+        val THEME = stringPreferencesKey("theme")
+        val DAILY_NUDGES = booleanPreferencesKey("daily_nudges")
+        val SENT_NUDGES = stringPreferencesKey("sent_nudges")
     }
 
     private fun Preferences.toSettings() = AppSettings(
@@ -41,6 +44,8 @@ class Store(private val context: Context) {
         notificationsEnabled = this[Keys.NOTIFS] ?: true,
         weightKg = this[Keys.WEIGHT] ?: 80.0,
         sex = runCatching { Sex.valueOf(this[Keys.SEX] ?: "MALE") }.getOrDefault(Sex.MALE),
+        theme = runCatching { AppTheme.valueOf(this[Keys.THEME] ?: "CLASSIC") }.getOrDefault(AppTheme.CLASSIC),
+        dailyNudges = this[Keys.DAILY_NUDGES] ?: false,
     )
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { it.toSettings() }
@@ -101,7 +106,26 @@ class Store(private val context: Context) {
             p[Keys.NOTIFS] = next.notificationsEnabled
             p[Keys.WEIGHT] = next.weightKg
             p[Keys.SEX] = next.sex.name
+            p[Keys.THEME] = next.theme.name
+            p[Keys.DAILY_NUDGES] = next.dailyNudges
         }
+    }
+
+    /**
+     * Atomowo rezerwuje slot przypomnienia (np. „2026-11-19|AFTERNOON”).
+     * Zwraca false, jeśli w tym slocie już coś wysłano – chroni przed podwójnym powiadomieniem.
+     */
+    suspend fun claimNudgeSlot(key: String): Boolean {
+        var claimed = false
+        context.dataStore.edit { p ->
+            val sent = p[Keys.SENT_NUDGES].orEmpty().split(",").filter { it.isNotBlank() }
+            if (key !in sent) {
+                // Trzymamy tylko kilka ostatnich kluczy (z ostatnich dni).
+                p[Keys.SENT_NUDGES] = (sent + key).takeLast(12).joinToString(",")
+                claimed = true
+            }
+        }
+        return claimed
     }
 
     /**

@@ -40,7 +40,7 @@ import com.devqube.drinktracker.data.fmt
 import com.devqube.drinktracker.data.statusDetails
 import com.devqube.drinktracker.data.statusLabel
 import com.devqube.drinktracker.ui.theme.LocalDrinkColors
-import com.devqube.drinktracker.ui.theme.Primary
+import com.devqube.drinktracker.ui.theme.LocalVoice
 import kotlin.math.max
 import kotlin.math.min
 
@@ -65,6 +65,7 @@ fun AlcoholWidgetCard(week: WeekData, size: WidgetSize, modifier: Modifier = Mod
     val shell = modifier
         .clip(RoundedCornerShape(22.dp))
         .background(MaterialTheme.colorScheme.surface)
+        .leopardSpots()
         .border(
             width = if (d.status == Status.OK) 1.dp else 1.5.dp,
             color = when (d.status) {
@@ -148,7 +149,7 @@ private fun Medium2x2(week: WeekData, status: Status, shell: Modifier) {
             Text("${d.drinkingDays}/${week.dayLimit} dni", fontSize = 11.sp, color = colors.muted)
             Text(statusLabel(status), fontSize = 11.sp, color = statusColor(status))
         }
-        if (status != Status.OK) AlertBox(status, d.headline, d.message, d.reasons, compact = true)
+        if (status != Status.OK) LocalVoice.current.alert(d).let { (h, m) -> AlertBox(status, h, m, d.reasons, compact = true) }
     }
 }
 
@@ -176,7 +177,7 @@ private fun Large4x2(week: WeekData, status: Status, shell: Modifier) {
             Text("${d.drinkingDays}/${week.dayLimit} dni z alkoholem", fontSize = 12.sp, color = colors.muted)
             StatusPill(status)
         }
-        if (status != Status.OK) AlertBox(status, d.headline, d.message, d.reasons, compact = false)
+        if (status != Status.OK) LocalVoice.current.alert(d).let { (h, m) -> AlertBox(status, h, m, d.reasons, compact = false) }
     }
 }
 
@@ -198,7 +199,7 @@ private fun ShimmerTotal(total: Double, limit: Int, status: Status, big: Boolean
         label = "shimmerX",
     )
     val brush = Brush.linearGradient(
-        colors = listOf(baseColor, Primary, baseColor),
+        colors = listOf(baseColor, MaterialTheme.colorScheme.primary, baseColor),
         start = androidx.compose.ui.geometry.Offset(x * 120f, 0f),
         end = androidx.compose.ui.geometry.Offset((x + 1f) * 120f, 0f),
     )
@@ -246,7 +247,7 @@ private fun Bars(week: WeekData, status: Status, height: androidx.compose.ui.uni
                     contentAlignment = Alignment.BottomCenter,
                 ) {
                     if (day.units > 0) {
-                        val barColor = if (hot) hotColor else Primary
+                        val barColor = if (hot) hotColor else MaterialTheme.colorScheme.primary
                         Box(
                             Modifier
                                 .fillMaxWidth()

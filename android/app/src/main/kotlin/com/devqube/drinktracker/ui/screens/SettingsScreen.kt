@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.devqube.drinktracker.data.AppTheme
 import com.devqube.drinktracker.data.DrinkType
 import com.devqube.drinktracker.data.Sex
 import com.devqube.drinktracker.data.fmt
@@ -121,7 +122,39 @@ fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                     colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                 )
             }
+            Spacer(Modifier.height(10.dp))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(colors.surface2.copy(alpha = 0.7f))
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Przypomnienia w ciągu dnia", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Południe, ok. 17:00 i wieczór – tylko gdy jest powód (np. wczoraj było picie, limit przekroczony).",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.muted,
+                    )
+                }
+                Switch(
+                    checked = settings.dailyNudges && settings.notificationsEnabled,
+                    enabled = settings.notificationsEnabled,
+                    onCheckedChange = { c -> vm.updateSettings { it.copy(dailyNudges = c) } },
+                    colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                )
+            }
         }
+
+        ThemeCard(
+            current = settings.theme,
+            onPick = { theme ->
+                // Wejście w Grażynę włącza też jej gderanie w ciągu dnia; powrót niczego nie wyłącza.
+                vm.updateSettings { it.copy(theme = theme, dailyNudges = it.dailyNudges || theme == AppTheme.GRAZYNA) }
+            },
+        )
 
         // Sekcja BAC – masa ciała i płeć.
         Card {
@@ -251,4 +284,61 @@ private fun AddTypeDialog(onDismiss: () -> Unit, onConfirm: (DrinkType) -> Unit)
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj") } },
     )
+}
+
+@Composable
+private fun ThemeCard(current: AppTheme, onPick: (AppTheme) -> Unit) {
+    val colors = LocalDrinkColors.current
+    var confirmGrazyna by remember { mutableStateOf(false) }
+
+    Card {
+        Text("Motyw", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "Wygląd, teksty, dźwięki powiadomień i widget.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.muted,
+        )
+        Spacer(Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SegChip(
+                label = AppTheme.CLASSIC.label,
+                selected = current == AppTheme.CLASSIC,
+                modifier = Modifier.weight(1f),
+                onClick = { onPick(AppTheme.CLASSIC) },
+            )
+            SegChip(
+                label = AppTheme.GRAZYNA.label,
+                selected = current == AppTheme.GRAZYNA,
+                modifier = Modifier.weight(1f),
+                onClick = { if (current != AppTheme.GRAZYNA) confirmGrazyna = true },
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "🔞 Grażyna (eksperymentalny): memiczna, wulgarna „wkurzona żona” – patelnia, kapeć i gderanie w powiadomieniach.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.muted,
+        )
+    }
+
+    if (confirmGrazyna) {
+        AlertDialog(
+            onDismissRequest = { confirmGrazyna = false },
+            title = { Text("Włączyć Grażynę? 🍳") },
+            text = {
+                Text(
+                    "Eksperymentalny motyw 18+ z wulgaryzmami i memicznym humorem. Zmienia wygląd, teksty, " +
+                        "dźwięki i widget oraz włącza przypomnienia w ciągu dnia. Możesz wrócić w każdej chwili."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmGrazyna = false
+                    onPick(AppTheme.GRAZYNA)
+                }) { Text("Dawaj, niech gdera") }
+            },
+            dismissButton = { TextButton(onClick = { confirmGrazyna = false }) { Text("Anuluj") } },
+        )
+    }
 }

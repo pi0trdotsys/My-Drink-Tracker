@@ -21,6 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.devqube.drinktracker.ui.theme.LocalDrinkColors
@@ -33,6 +36,7 @@ fun Card(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
             .background(MaterialTheme.colorScheme.surface)
+            .leopardSpots()
             .border(1.dp, colors.border, RoundedCornerShape(22.dp))
             .padding(20.dp),
     ) { content() }
@@ -103,4 +107,39 @@ fun SettingSlider(
         steps = steps,
         onValueChangeFinished = { dragging = false; onCommit(local) },
     )
+}
+
+/**
+ * Cętki panterki w tle karty (motyw Grażyna). Pozycje są deterministyczne, więc wzór
+ * nie „skacze” przy przerysowaniu. W innych motywach modyfikator nic nie robi.
+ */
+@Composable
+fun Modifier.leopardSpots(): Modifier {
+    if (!LocalDrinkColors.current.leopard) return this
+    val gold = LocalDrinkColors.current.warn
+    return this.drawBehind {
+        val rnd = java.util.Random(42)
+        val step = 46.dp.toPx()
+        var y = 0f
+        while (y < size.height + step) {
+            var x = if ((y / step).toInt() % 2 == 0) 0f else step / 2
+            while (x < size.width + step) {
+                val cx = x + (rnd.nextFloat() - 0.5f) * step * 0.5f
+                val cy = y + (rnd.nextFloat() - 0.5f) * step * 0.5f
+                val r = step * (0.16f + rnd.nextFloat() * 0.08f)
+                // Rozeta: jasne wnętrze i kilka ciemnych plamek dookoła.
+                drawCircle(gold.copy(alpha = 0.06f), radius = r, center = Offset(cx, cy))
+                repeat(5) { k ->
+                    val a = k / 5f * 2f * Math.PI.toFloat() + rnd.nextFloat()
+                    drawCircle(
+                        Color.Black.copy(alpha = 0.18f),
+                        radius = r * 0.32f,
+                        center = Offset(cx + kotlin.math.cos(a) * r * 1.15f, cy + kotlin.math.sin(a) * r * 1.15f),
+                    )
+                }
+                x += step
+            }
+            y += step
+        }
+    }
 }

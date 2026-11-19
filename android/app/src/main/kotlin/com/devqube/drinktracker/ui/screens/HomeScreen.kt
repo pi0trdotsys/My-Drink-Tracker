@@ -35,6 +35,7 @@ import com.devqube.drinktracker.ui.components.Card
 import com.devqube.drinktracker.ui.components.Eyebrow
 import com.devqube.drinktracker.ui.components.WidgetSize
 import com.devqube.drinktracker.ui.theme.LocalDrinkColors
+import com.devqube.drinktracker.ui.theme.LocalVoice
 
 @Composable
 fun HomeScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
@@ -46,6 +47,7 @@ fun HomeScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
     val bac = currentBac(entries, settings)
     val streak = Fancy.dryStreak(entries)
     val colors = LocalDrinkColors.current
+    val voice = LocalVoice.current
 
     Column(
         modifier
@@ -56,10 +58,10 @@ fun HomeScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
     ) {
         // Nagłówek z osobowością.
         Column {
-            Eyebrow("Twój tydzień")
+            Eyebrow(voice.homeEyebrow)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Spożycie alkoholu",
+                    voice.homeTitle,
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
@@ -68,7 +70,7 @@ fun HomeScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 Text(Fancy.emblem(details.status), fontSize = 14.sp)
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    Fancy.tagline(details.status, streak),
+                    voice.tagline(details.status, streak),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.muted,
                 )
@@ -97,6 +99,7 @@ fun HomeScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
 @Composable
 private fun BacCard(bac: BacEstimate, settings: AppSettings) {
     val colors = LocalDrinkColors.current
+    val (bacLabel, bacNote) = LocalVoice.current.bacLabel(bac.level)
     val accent = when {
         bac.perMille <= 0.05 -> colors.ok
         bac.perMille < 0.5 -> colors.warn
@@ -104,7 +107,7 @@ private fun BacCard(bac: BacEstimate, settings: AppSettings) {
     }
     Card {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Eyebrow("Szacowany poziom alkoholu")
+            Eyebrow(LocalVoice.current.bacEyebrow)
             Text("${settings.sex.label}, ${settings.weightKg.toInt()} kg", style = MaterialTheme.typography.labelMedium, color = colors.muted)
         }
         Spacer(Modifier.height(8.dp))
@@ -118,8 +121,8 @@ private fun BacCard(bac: BacEstimate, settings: AppSettings) {
             Text(" ‰", fontSize = 18.sp, color = colors.muted, modifier = Modifier.padding(bottom = 6.dp))
             Spacer(Modifier.width(12.dp))
             Column(Modifier.padding(bottom = 6.dp)) {
-                Text(bac.level.label, style = MaterialTheme.typography.titleMedium, color = accent)
-                Text(bac.level.note, style = MaterialTheme.typography.bodyMedium, color = colors.muted)
+                Text(bacLabel, style = MaterialTheme.typography.titleMedium, color = accent)
+                Text(bacNote, style = MaterialTheme.typography.bodyMedium, color = colors.muted)
             }
         }
         if (bac.perMille > 0.05) {

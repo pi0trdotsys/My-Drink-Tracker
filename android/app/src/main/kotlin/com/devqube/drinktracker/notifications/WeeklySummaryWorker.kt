@@ -8,6 +8,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.devqube.drinktracker.data.Fancy
 import com.devqube.drinktracker.data.Store
+import com.devqube.drinktracker.data.voiceFor
 import com.devqube.drinktracker.data.buildWeek
 import com.devqube.drinktracker.data.statusDetails
 import java.time.LocalDateTime
@@ -26,8 +27,8 @@ class WeeklySummaryWorker(context: Context, params: WorkerParameters) : Coroutin
         val week = buildWeek(entries, settings)
         val details = statusDetails(week)
         val streak = Fancy.dryStreak(entries)
-        val (title, body) = Fancy.weeklyNotification(details, streak)
-        Notifier.notifyWeekly(applicationContext, title, body)
+        val (title, body) = voiceFor(settings.theme).weeklyMessage(details, streak)
+        Notifier.notifyWeekly(applicationContext, title, body, settings.theme)
         return Result.success()
     }
 

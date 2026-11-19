@@ -22,6 +22,14 @@ data class DrinkEntry(
  */
 fun newEntryId(): Long = java.util.UUID.randomUUID().mostSignificantBits and Long.MAX_VALUE
 
+/** Motyw aplikacji: wygląd, teksty, dźwięki powiadomień i widget. */
+enum class AppTheme(val label: String) {
+    CLASSIC("Klasyczny"),
+
+    /** Eksperymentalny, 18+: wulgarne, memiczne komentarze „wkurzonej żony”. */
+    GRAZYNA("Grażyna 🍳"),
+}
+
 /** Wszystkie ustawienia użytkownika. */
 data class AppSettings(
     val unitLimit: Double = 14.0,
@@ -31,6 +39,9 @@ data class AppSettings(
     val notificationsEnabled: Boolean = true,
     val weightKg: Double = 80.0,
     val sex: Sex = Sex.MALE,
+    val theme: AppTheme = AppTheme.CLASSIC,
+    /** Sensowne przypomnienia w ciągu dnia (południe / 17:00 / wieczór). */
+    val dailyNudges: Boolean = false,
 ) {
     val warnRatio: Double get() = warnRatioPercent / 100.0
 }

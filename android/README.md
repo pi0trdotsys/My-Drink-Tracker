@@ -43,6 +43,12 @@ Powiadomienia „planujące" tydzień, z dźwiękiem brzdęku kieliszków:
   - **Podsumowanie tygodnia** – cyklicznie w niedzielę o 20:00 (WorkManager).
   - **Własny dźwięk** – „brzdęk kieliszków" (toast/cheers) generowany syntetycznie,
     podpięty do wszystkich kanałów (`res/raw/clink_cheers.wav`).
+- **Przypomnienia w ciągu dnia** (opcjonalne) – w południe, ok. 17:00 i wieczorem, ale tylko
+  gdy jest powód: alkohol we krwi („nie siadaj za kółko”), picie poprzedniego dnia, przekroczony
+  limit, wykorzystane dni, weekendowy budżet, seria trzeźwych dni. Najwyżej raz na porę dnia.
+- **Motyw „Grażyna” 🍳 (eksperymentalny, 18+)** – memiczna, wulgarna „wkurzona żona”: panterkowy
+  wygląd ze szminkowym różem, własne teksty w aplikacji, powiadomieniach i na widgecie
+  („Dzisiaj nie waż się pić!”), dźwięki patelni i kapcia. Włączany w Ustawieniach po potwierdzeniu.
 - **Widget na ekran główny** (Glance) – skalowalny; czyta te same dane, klik otwiera aplikację.
 - **Fancy smaczek** – złoty „shimmer" przesuwający się po głównej liczbie, rotujące dowcipne
   hasła zależne od statusu, licznik trzeźwych dni z odznakami (🌱⭐🔥🥇🏆) oraz powiadomienia

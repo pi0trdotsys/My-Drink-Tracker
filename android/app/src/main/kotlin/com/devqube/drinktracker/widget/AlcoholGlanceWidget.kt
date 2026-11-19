@@ -13,6 +13,7 @@ import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -39,18 +40,16 @@ import com.devqube.drinktracker.data.buildWeek
 import com.devqube.drinktracker.data.fmt
 import com.devqube.drinktracker.data.statusDetails
 import com.devqube.drinktracker.data.statusLabel
+import com.devqube.drinktracker.data.voiceFor
+import com.devqube.drinktracker.ui.theme.Palette
+import com.devqube.drinktracker.ui.theme.paletteFor
 import kotlin.math.max
 
-private val Surface = Color(0xFF23252F)
-private val Surface2 = Color(0xFF2E313D)
-private val Foreground = Color(0xFFF1F2F7)
-private val Muted = Color(0xFFA8ABB8)
-private val PrimaryC = Color(0xFFE3A54B)
-private val OkC = Color(0xFF45C08A)
-private val WarnC = Color(0xFFE6B646)
-private val OverC = Color(0xFFDE5140)
-
 class AlcoholGlanceWidget : GlanceAppWidget() {
+
+    // Rzeczywisty rozmiar widgetu w LocalSize. Domyślny SizeMode.Single podaje zawsze rozmiar
+    // minimalny, przez co po powiększeniu nie pojawiały się słupki ani dopisek.
+    override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val store = Store.get(context)
@@ -59,6 +58,8 @@ class AlcoholGlanceWidget : GlanceAppWidget() {
         val week = buildWeek(entries, settings)
         val details = statusDetails(week)
         val streak = Fancy.dryStreak(entries)
+        val palette = paletteFor(settings.theme)
+        val line = voiceFor(settings.theme).widgetLine(details.status, streak)
 
         provideContent {
             GlanceTheme {
@@ -72,17 +73,18 @@ class AlcoholGlanceWidget : GlanceAppWidget() {
                     overUnits = details.overUnits,
                     dayUnits = week.days.map { it.units },
                     dailyRef = if (week.dayLimit > 0) week.unitLimit / week.dayLimit else week.unitLimit,
-                    streak = streak,
+                    p = palette,
+                    line = line,
                 )
             }
         }
     }
 }
 
-private fun statusColor(status: Status): Color = when (status) {
-    Status.OK -> OkC
-    Status.WARN -> WarnC
-    Status.OVER -> OverC
+private fun statusColor(status: Status, p: Palette): Color = when (status) {
+    Status.OK -> p.ok
+    Status.WARN -> p.warn
+    Status.OVER -> p.over
 }
 
 @Composable
@@ -96,18 +98,19 @@ private fun WidgetBody(
     overUnits: Double,
     dayUnits: List<Double>,
     dailyRef: Double,
-    streak: Int,
+    p: Palette,
+    line: String,
 ) {
     val size = LocalSize.current
     val showBars = size.width >= 200.dp
-    val showStreak = size.height >= 110.dp
-    val statusCol = statusColor(status)
+    val showLine = size.height >= 110.dp
+    val statusCol = statusColor(status, p)
     val context = LocalContext.current
 
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(Surface)
+            .background(p.surface)
             .cornerRadius(20.dp)
             .padding(14.dp)
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
@@ -116,7 +119,7 @@ private fun WidgetBody(
         Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "TEN TYDZIEŃ",
-                style = TextStyle(color = ColorProvider(Muted), fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                style = TextStyle(color = ColorProvider(p.muted), fontSize = 10.sp, fontWeight = FontWeight.Medium),
             )
             Spacer(GlanceModifier.defaultWeight())
             Box(GlanceModifier.size(10.dp).cornerRadius(5.dp).background(statusCol)) {}
@@ -126,12 +129,12 @@ private fun WidgetBody(
             Text(
                 fmt(total),
                 style = TextStyle(
-                    color = ColorProvider(if (status == Status.OVER) OverC else Foreground),
+                    color = ColorProvider(if (status == Status.OVER) p.over else p.foreground),
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                 ),
             )
-            Text(" / $limit SU", style = TextStyle(color = ColorProvider(Muted), fontSize = 13.sp))
+            Text(" / $limit SU", style = TextStyle(color = ColorProvider(p.muted), fontSize = 13.sp))
         }
         Spacer(GlanceModifier.height(2.dp))
         Text(
@@ -142,28 +145,28 @@ private fun WidgetBody(
 
         if (showBars) {
             Spacer(GlanceModifier.height(8.dp))
-            MiniBars(dayUnits, dailyRef, status)
+            MiniBars(dayUnits, dailyRef, status, p)
         }
-        if (showStreak) {
+        if (showLine) {
             Spacer(GlanceModifier.height(6.dp))
-            Text(Fancy.streakLine(streak), style = TextStyle(color = ColorProvider(Muted), fontSize = 11.sp))
+            Text(line, style = TextStyle(color = ColorProvider(p.muted), fontSize = 11.sp))
         }
     }
 }
 
 @Composable
-private fun MiniBars(dayUnits: List<Double>, dailyRef: Double, status: Status) {
+private fun MiniBars(dayUnits: List<Double>, dailyRef: Double, status: Status, p: Palette) {
     val maxVal = max(dailyRef * 1.4, dayUnits.maxOrNull() ?: 0.0)
     val maxBar = 34
-    val hot = if (status == Status.OK) WarnC else statusColor(status)
+    val hot = if (status == Status.OK) p.warn else statusColor(status, p)
     Row(modifier = GlanceModifier.fillMaxWidth().height(maxBar.dp), verticalAlignment = Alignment.Bottom) {
         dayUnits.forEach { u ->
             val frac = if (maxVal > 0) (u / maxVal) else 0.0
             val h = if (u > 0) max((frac * maxBar).toInt(), 4) else 2
             val color = when {
-                u <= 0 -> Surface2
+                u <= 0 -> p.surface2
                 u > dailyRef -> hot
-                else -> PrimaryC
+                else -> p.primary
             }
             Box(
                 modifier = GlanceModifier.defaultWeight().height(maxBar.dp),
