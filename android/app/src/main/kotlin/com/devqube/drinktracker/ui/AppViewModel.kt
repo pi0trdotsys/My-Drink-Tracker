@@ -5,7 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.glance.appwidget.updateAll
 import com.devqube.drinktracker.data.AppSettings
+import com.devqube.drinktracker.data.DEFAULT_DRINK_TYPES
 import com.devqube.drinktracker.data.DrinkEntry
+import com.devqube.drinktracker.data.newEntryId
 import com.devqube.drinktracker.data.DrinkType
 import com.devqube.drinktracker.data.Store
 import com.devqube.drinktracker.data.toUnits
@@ -26,19 +28,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val entries: StateFlow<List<DrinkEntry>> =
         store.entries.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    // Startujemy od typów domyślnych, aby ekran logowania od razu miał co zaznaczyć.
     val drinkTypes: StateFlow<List<DrinkType>> =
-        store.allDrinkTypes.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        store.allDrinkTypes.stateIn(viewModelScope, SharingStarted.Eagerly, DEFAULT_DRINK_TYPES)
 
     fun addDrink(name: String, volumeMl: Double, abv: Double, timestamp: Long = System.currentTimeMillis()) {
         viewModelScope.launch {
             val gramsPerUnit = store.snapshotSettings().gramsPerUnit
             val entry = DrinkEntry(
-                id = System.currentTimeMillis(),
+                id = newEntryId(),
                 timestamp = timestamp,
                 name = name,
                 volumeMl = volumeMl,
                 abv = abv,
-                units = toUnits(volumeMl, abv, gramsPerUnit),
+                loggedUnits = toUnits(volumeMl, abv, gramsPerUnit),
             )
             store.addEntry(entry)
             LimitChecker.checkAndNotify(getApplication())

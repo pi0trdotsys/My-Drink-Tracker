@@ -11,10 +11,26 @@ import java.util.Locale
 private val DAY_LABELS = listOf("Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd")
 private val PL = Locale("pl", "PL")
 
-/** Buduje dane bieżącego tygodnia (poniedziałek–niedziela) z listy wpisów. */
-fun buildWeek(entries: List<DrinkEntry>, settings: AppSettings, zone: ZoneId = ZoneId.systemDefault()): WeekData {
-    val today = LocalDate.now(zone)
-    val monday = today.minusDays((today.dayOfWeek.value - 1).toLong())
+/** Milisekundy do najbliższej północy (+30 s zapasu, by trafić już w nowy dzień). */
+fun millisUntilNextMidnight(now: java.time.ZonedDateTime): Long {
+    val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(now.zone)
+    return java.time.Duration.between(now, nextMidnight).toMillis() + 30_000
+}
+
+/** Poniedziałek tygodnia, do którego należy dany dzień. */
+fun mondayOf(day: LocalDate): LocalDate = day.minusDays((day.dayOfWeek.value - 1).toLong())
+
+/**
+ * Buduje dane bieżącego tygodnia (poniedziałek–niedziela) z listy wpisów.
+ * SU liczone są według bieżącej definicji jednostki, więc zmiana ustawień przelicza historię spójnie.
+ */
+fun buildWeek(
+    entries: List<DrinkEntry>,
+    settings: AppSettings,
+    zone: ZoneId = ZoneId.systemDefault(),
+    today: LocalDate = LocalDate.now(zone),
+): WeekData {
+    val monday = mondayOf(today)
     val sunday = monday.plusDays(6)
 
     val perDay = DoubleArray(7)
@@ -22,7 +38,7 @@ fun buildWeek(entries: List<DrinkEntry>, settings: AppSettings, zone: ZoneId = Z
         val d = Instant.ofEpochMilli(e.timestamp).atZone(zone).toLocalDate()
         if (!d.isBefore(monday) && !d.isAfter(sunday)) {
             val idx = ChronoUnit.DAYS.between(monday, d).toInt()
-            if (idx in 0..6) perDay[idx] += e.units
+            if (idx in 0..6) perDay[idx] += e.unitsFor(settings.gramsPerUnit)
         }
     }
 
@@ -45,30 +61,20 @@ private fun formatRange(from: LocalDate, to: LocalDate): String {
     return "${from.dayOfMonth} $m1 – ${to.dayOfMonth} $m2"
 }
 
-/** Suma gramów czystego etanolu wypitych dzisiaj. */
-fun gramsToday(entries: List<DrinkEntry>, zone: ZoneId = ZoneId.systemDefault()): Double {
-    val today = LocalDate.now(zone)
-    return entries.filter { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() == today }
-        .sumOf { it.grams }
-}
-
-/** Godziny od pierwszego dzisiejszego trunku (0, gdy brak). */
-fun hoursSinceFirstToday(entries: List<DrinkEntry>, zone: ZoneId = ZoneId.systemDefault()): Double {
-    val today = LocalDate.now(zone)
-    val todays = entries.filter { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() == today }
-    if (todays.isEmpty()) return 0.0
-    val first = todays.minOf { it.timestamp }
-    return (System.currentTimeMillis() - first) / 3_600_000.0
-}
-
-/** Wygodny skrót – szacowane BAC z listy wpisów i ustawień. */
-fun currentBac(entries: List<DrinkEntry>, settings: AppSettings): BacEstimate =
-    estimateBac(
-        gramsToday = gramsToday(entries),
-        hoursSinceFirst = hoursSinceFirstToday(entries),
-        weightKg = settings.weightKg,
-        sex = settings.sex,
-    )
+/**
+ * Szacowane BAC w chwili [nowMillis]. Nie zależy od daty kalendarzowej: trunek z 23:00
+ * nadal się liczy o 01:00 (wcześniej o północy promile spadały do zera).
+ */
+fun currentBac(
+    entries: List<DrinkEntry>,
+    settings: AppSettings,
+    nowMillis: Long = System.currentTimeMillis(),
+): BacEstimate = bacAt(
+    drinks = entries.map { it.timestamp to it.grams },
+    weightKg = settings.weightKg,
+    sex = settings.sex,
+    nowMillis = nowMillis,
+)
 
 /** Krótka etykieta wybranego momentu, np. „Dziś, 14:09" lub „28 lip, 21:40". */
 fun formatWhenLabel(millis: Long, zone: ZoneId = ZoneId.systemDefault()): String {

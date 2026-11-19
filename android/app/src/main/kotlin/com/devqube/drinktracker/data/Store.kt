@@ -33,17 +33,17 @@ class Store(private val context: Context) {
         val LAST_NOTIFIED_STATUS = stringPreferencesKey("last_notified_status")
     }
 
-    val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
-        AppSettings(
-            unitLimit = p[Keys.UNIT_LIMIT] ?: 14.0,
-            dayLimit = p[Keys.DAY_LIMIT] ?: 4,
-            gramsPerUnit = p[Keys.GRAMS_PER_UNIT] ?: GRAMS_PER_UNIT_DEFAULT,
-            warnRatioPercent = p[Keys.WARN_PERCENT] ?: 80,
-            notificationsEnabled = p[Keys.NOTIFS] ?: true,
-            weightKg = p[Keys.WEIGHT] ?: 80.0,
-            sex = runCatching { Sex.valueOf(p[Keys.SEX] ?: "MALE") }.getOrDefault(Sex.MALE),
-        )
-    }
+    private fun Preferences.toSettings() = AppSettings(
+        unitLimit = this[Keys.UNIT_LIMIT] ?: 14.0,
+        dayLimit = this[Keys.DAY_LIMIT] ?: 4,
+        gramsPerUnit = this[Keys.GRAMS_PER_UNIT] ?: GRAMS_PER_UNIT_DEFAULT,
+        warnRatioPercent = this[Keys.WARN_PERCENT] ?: 80,
+        notificationsEnabled = this[Keys.NOTIFS] ?: true,
+        weightKg = this[Keys.WEIGHT] ?: 80.0,
+        sex = runCatching { Sex.valueOf(this[Keys.SEX] ?: "MALE") }.getOrDefault(Sex.MALE),
+    )
+
+    val settings: Flow<AppSettings> = context.dataStore.data.map { it.toSettings() }
 
     val entries: Flow<List<DrinkEntry>> = context.dataStore.data.map { p ->
         parseEntries(p[Keys.ENTRIES])
@@ -90,10 +90,10 @@ class Store(private val context: Context) {
         }
     }
 
+    /** Odczyt i zapis w jednej transakcji – równoległe zmiany się nie nadpisują. */
     suspend fun updateSettings(transform: (AppSettings) -> AppSettings) {
-        val current = settings.first()
-        val next = transform(current)
         context.dataStore.edit { p ->
+            val next = transform(p.toSettings())
             p[Keys.UNIT_LIMIT] = next.unitLimit
             p[Keys.DAY_LIMIT] = next.dayLimit
             p[Keys.GRAMS_PER_UNIT] = next.gramsPerUnit
@@ -104,7 +104,10 @@ class Store(private val context: Context) {
         }
     }
 
-    /** Zapamiętuje ostatnio zgłoszony status, by nie spamować powiadomieniami. */
+    /**
+     * Ostatnio zgłoszony status w formacie „<poniedziałek tygodnia>|<status>",
+     * aby dźwięk grał tylko przy zmianie statusu (i na start nowego tygodnia).
+     */
     suspend fun lastNotifiedStatus(): String? = context.dataStore.data.first()[Keys.LAST_NOTIFIED_STATUS]
 
     suspend fun setLastNotifiedStatus(value: String) {
@@ -123,7 +126,7 @@ class Store(private val context: Context) {
                     name = o.getString("name"),
                     volumeMl = o.getDouble("volumeMl"),
                     abv = o.getDouble("abv"),
-                    units = o.getDouble("units"),
+                    loggedUnits = o.optDouble("units", 0.0),
                 )
             }
         }.getOrDefault(emptyList())
@@ -139,7 +142,7 @@ class Store(private val context: Context) {
                     .put("name", e.name)
                     .put("volumeMl", e.volumeMl)
                     .put("abv", e.abv)
-                    .put("units", e.units)
+                    .put("units", e.loggedUnits)
             )
         }
         return arr.toString()

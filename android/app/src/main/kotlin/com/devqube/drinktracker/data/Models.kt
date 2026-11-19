@@ -7,10 +7,20 @@ data class DrinkEntry(
     val name: String,
     val volumeMl: Double,
     val abv: Double,
-    val units: Double,
+    /** SU wyliczone w chwili zapisu – tylko dla zgodności formatu, nie używać w obliczeniach. */
+    val loggedUnits: Double,
 ) {
     val grams: Double get() = toGrams(volumeMl, abv)
+
+    /** SU według bieżącej definicji jednostki – zmiana ustawień przelicza całą historię spójnie. */
+    fun unitsFor(gramsPerUnit: Int): Double = toUnits(volumeMl, abv, gramsPerUnit)
 }
+
+/**
+ * Losowe, dodatnie ID wpisu. Znacznik czasu w milisekundach mógł się powtórzyć przy
+ * szybkim podwójnym dodaniu, a wtedy usunięcie jednego wpisu kasowało oba.
+ */
+fun newEntryId(): Long = java.util.UUID.randomUUID().mostSignificantBits and Long.MAX_VALUE
 
 /** Wszystkie ustawienia użytkownika. */
 data class AppSettings(

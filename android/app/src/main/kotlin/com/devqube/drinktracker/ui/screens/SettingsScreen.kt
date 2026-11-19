@@ -45,7 +45,8 @@ import com.devqube.drinktracker.data.toUnits
 import com.devqube.drinktracker.ui.AppViewModel
 import com.devqube.drinktracker.ui.components.Card
 import com.devqube.drinktracker.ui.components.Eyebrow
-import com.devqube.drinktracker.ui.components.LabeledSlider
+import com.devqube.drinktracker.ui.components.SettingSlider
+import kotlin.math.roundToInt
 import com.devqube.drinktracker.ui.theme.LocalDrinkColors
 
 @Composable
@@ -66,38 +67,41 @@ fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
             Text("Ustawienia limitów", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(16.dp))
 
-            LabeledSlider(
+            SettingSlider(
                 label = "Limit tygodniowy",
-                valueText = "${settings.unitLimit.toInt()} SU",
                 value = settings.unitLimit.toFloat(),
-                onValueChange = { v -> vm.updateSettings { it.copy(unitLimit = v.toDouble()) } },
+                valueText = { "${it.roundToInt()} SU" },
+                onCommit = { v -> vm.updateSettings { it.copy(unitLimit = v.roundToInt().toDouble()) } },
                 valueRange = 0f..30f,
                 steps = 29,
             )
             Spacer(Modifier.height(10.dp))
-            LabeledSlider(
+            SettingSlider(
                 label = "Maks. dni z alkoholem w tygodniu",
-                valueText = "${settings.dayLimit} dni",
                 value = settings.dayLimit.toFloat(),
-                onValueChange = { v -> vm.updateSettings { it.copy(dayLimit = v.toInt()) } },
+                valueText = { "${it.roundToInt()} dni" },
+                onCommit = { v -> vm.updateSettings { it.copy(dayLimit = v.roundToInt()) } },
                 valueRange = 0f..7f,
                 steps = 6,
             )
             Spacer(Modifier.height(10.dp))
-            LabeledSlider(
+            SettingSlider(
                 label = "Definicja jednostki (g czystego etanolu)",
-                valueText = "${settings.gramsPerUnit} g",
                 value = settings.gramsPerUnit.toFloat(),
-                onValueChange = { v -> vm.updateSettings { it.copy(gramsPerUnit = v.toInt()) } },
+                valueText = { "${it.roundToInt()} g" },
+                onCommit = { v -> vm.updateSettings { it.copy(gramsPerUnit = v.roundToInt()) } },
                 valueRange = 8f..14f,
                 steps = 5,
             )
             Spacer(Modifier.height(10.dp))
-            LabeledSlider(
+            SettingSlider(
                 label = "Próg ostrzeżenia",
-                valueText = "${settings.warnRatioPercent}% (${fmt(settings.unitLimit * settings.warnRatioPercent / 100)} SU)",
                 value = settings.warnRatioPercent.toFloat(),
-                onValueChange = { v -> vm.updateSettings { it.copy(warnRatioPercent = (Math.round(v / 5f) * 5)) } },
+                valueText = { p ->
+                    val pct = (p / 5f).roundToInt() * 5
+                    "$pct% (${fmt(settings.unitLimit * pct / 100)} SU)"
+                },
+                onCommit = { v -> vm.updateSettings { it.copy(warnRatioPercent = (v / 5f).roundToInt() * 5) } },
                 valueRange = 50f..100f,
                 steps = 9,
             )
@@ -129,11 +133,11 @@ fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 color = colors.muted,
             )
             Spacer(Modifier.height(14.dp))
-            LabeledSlider(
+            SettingSlider(
                 label = "Masa ciała",
-                valueText = "${settings.weightKg.toInt()} kg",
                 value = settings.weightKg.toFloat(),
-                onValueChange = { v -> vm.updateSettings { it.copy(weightKg = v.toDouble()) } },
+                valueText = { "${it.roundToInt()} kg" },
+                onCommit = { v -> vm.updateSettings { it.copy(weightKg = v.roundToInt().toDouble()) } },
                 valueRange = 40f..150f,
                 steps = 21,
             )

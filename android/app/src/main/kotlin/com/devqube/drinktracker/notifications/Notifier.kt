@@ -13,7 +13,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.devqube.drinktracker.R
 import com.devqube.drinktracker.data.Status
-import com.devqube.drinktracker.data.StatusDetails
 
 object Notifier {
 
@@ -76,7 +75,7 @@ object Notifier {
     }
 
     /** Powiadomienie o statusie/planie – kanał zależny od tego, jak blisko limitu jesteś. */
-    fun notifyStatus(context: Context, title: String, body: String, status: Status) {
+    fun notifyStatus(context: Context, title: String, body: String, status: Status, alert: Boolean) {
         if (!canPost(context)) return
         val channel = if (status == Status.OK) CHANNEL_PLAN else CHANNEL_LIMITS
         val priority = if (status == Status.OK) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH
@@ -88,6 +87,8 @@ object Notifier {
             .setPriority(priority)
             .setColor(accent(status))
             .setSound(soundUri(context))
+            // Bez dźwięku, wibracji i heads-upu – treść aktualizuje się po cichu.
+            .setSilent(!alert)
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(ID_STATUS, n)
@@ -106,11 +107,5 @@ object Notifier {
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(ID_WEEKLY, n)
-    }
-
-    fun statusKey(details: StatusDetails): String = when (details.status) {
-        Status.OK -> "ok"
-        Status.WARN -> "warn"
-        Status.OVER -> "over"
     }
 }

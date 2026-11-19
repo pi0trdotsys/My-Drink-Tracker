@@ -47,14 +47,18 @@ object Fancy {
      * Liczba kolejnych najświeższych dni bez alkoholu (dry streak), licząc wstecz
      * od dziś aż do ostatniego dnia z alkoholem. Bez historii picia zwraca 0.
      */
-    fun dryStreak(entries: List<DrinkEntry>, zone: ZoneId = ZoneId.systemDefault()): Int {
+    fun dryStreak(
+        entries: List<DrinkEntry>,
+        zone: ZoneId = ZoneId.systemDefault(),
+        today: LocalDate = LocalDate.now(zone),
+    ): Int {
         if (entries.isEmpty()) return 0
         val drinkingDays = entries
             .map { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }
             .toSet()
         val lastDrink = drinkingDays.max()
         var streak = 0
-        var day = LocalDate.now(zone)
+        var day = today
         // Dzisiaj liczy się tylko, jeśli nic dziś nie wypito.
         while (day !in drinkingDays && !day.isBefore(lastDrink)) {
             streak++

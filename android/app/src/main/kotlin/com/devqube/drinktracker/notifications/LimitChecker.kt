@@ -4,8 +4,10 @@ import android.content.Context
 import com.devqube.drinktracker.data.Fancy
 import com.devqube.drinktracker.data.Store
 import com.devqube.drinktracker.data.buildWeek
+import com.devqube.drinktracker.data.mondayOf
 import com.devqube.drinktracker.data.statusDetails
 import com.devqube.drinktracker.data.toUnits
+import java.time.LocalDate
 
 /**
  * Po zalogowaniu (również wstecznym) trunku wysyła powiadomienie "planujące":
@@ -27,7 +29,11 @@ object LimitChecker {
         val oneBeerUnits = toUnits(500.0, 5.0, settings.gramsPerUnit)
         val (title, body) = Fancy.planMessage(details, oneBeerUnits)
 
-        Notifier.notifyStatus(context, title, body, details.status)
-        store.setLastNotifiedStatus(Notifier.statusKey(details))
+        // Dźwięk tylko przy pierwszym wpisie tygodnia lub eskalacji statusu; poza tym cicha aktualizacja.
+        val monday = mondayOf(LocalDate.now())
+        val alert = AlertPolicy.shouldAlert(store.lastNotifiedStatus(), monday, details.status)
+
+        Notifier.notifyStatus(context, title, body, details.status, alert)
+        store.setLastNotifiedStatus(AlertPolicy.key(monday, details.status))
     }
 }

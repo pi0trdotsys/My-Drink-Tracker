@@ -258,7 +258,7 @@ fun LogScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                             Text(e.name, style = MaterialTheme.typography.bodyLarge)
                             Text("$day, $time", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
                         }
-                        Text("${fmt(e.units)} SU", color = colors.muted)
+                        Text("${fmt(e.unitsFor(settings.gramsPerUnit))} SU", color = colors.muted)
                         IconButton(onClick = { vm.deleteEntry(e.id) }) {
                             Icon(Icons.Default.Close, contentDescription = "Usuń", tint = colors.muted)
                         }
