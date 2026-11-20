@@ -32,10 +32,12 @@ private enum class Tab(val label: String, val icon: ImageVector) {
 }
 
 @Composable
-fun AppRoot(vm: AppViewModel, openLogRequests: Int = 0) {
+fun AppRoot(vm: AppViewModel, openLogRequests: Int = 0, openUpdatesRequests: Int = 0) {
     var tab by remember { mutableStateOf(Tab.HOME) }
     // Prośba z widgetu („+ Przyznaję się” / „+ Dodaj”) – przejdź na ekran logowania.
     LaunchedEffect(openLogRequests) { if (openLogRequests > 0) tab = Tab.LOG }
+    // Powiadomienie o aktualizacji – Ustawienia, przewinięte do karty aktualizacji.
+    LaunchedEffect(openUpdatesRequests) { if (openUpdatesRequests > 0) tab = Tab.SETTINGS }
     val colors = LocalDrinkColors.current
 
     Scaffold(
@@ -64,7 +66,7 @@ fun AppRoot(vm: AppViewModel, openLogRequests: Int = 0) {
         when (tab) {
             Tab.HOME -> HomeScreen(vm, content)
             Tab.LOG -> LogScreen(vm, content)
-            Tab.SETTINGS -> SettingsScreen(vm, content)
+            Tab.SETTINGS -> SettingsScreen(vm, content, scrollToUpdatesRequest = openUpdatesRequests)
         }
     }
 }

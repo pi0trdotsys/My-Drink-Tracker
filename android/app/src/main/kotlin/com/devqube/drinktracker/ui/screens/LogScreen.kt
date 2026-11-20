@@ -41,6 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devqube.drinktracker.data.DrinkType
+import com.devqube.drinktracker.data.KropiSync
 import com.devqube.drinktracker.data.combineDateTime
 import com.devqube.drinktracker.data.fmt
 import com.devqube.drinktracker.data.formatEntryTime
@@ -67,6 +70,7 @@ fun LogScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
     val entries by vm.entries.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
     val colors = LocalDrinkColors.current
+    val context = LocalContext.current
 
     var selectedId by remember { mutableStateOf(types.firstOrNull()?.id) }
     var name by remember { mutableStateOf(types.firstOrNull()?.name ?: "Trunek") }
@@ -228,13 +232,26 @@ fun LogScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                         .clip(RoundedCornerShape(24.dp))
                         .background(MaterialTheme.colorScheme.primary)
                         .clickable {
-                            vm.addDrink(
+                            val entry = vm.addDrink(
                                 name.ifBlank { "Trunek" },
                                 volume.toDouble(),
                                 abv.toDouble(),
                                 timestamp = whenMillis ?: System.currentTimeMillis(),
                             )
                             whenMillis = null
+                            // Ten sam trunek do Kropi (nawodnienie). Sukces potwierdza sama Kropi swoim
+                            // komunikatem; tu informujemy tylko, gdy wpis nie mógł zostać przekazany.
+                            if (settings.kropiSync) {
+                                when (KropiSync.send(context, entry)) {
+                                    KropiSync.Result.NeedsUpdateForBackdated -> Toast.makeText(
+                                        context, "Kropi: zaktualizuj aplikację, by przekazywać wpisy wsteczne", Toast.LENGTH_LONG,
+                                    ).show()
+                                    KropiSync.Result.Failed -> Toast.makeText(
+                                        context, "Nie udało się przekazać wpisu do Kropi", Toast.LENGTH_SHORT,
+                                    ).show()
+                                    else -> Unit
+                                }
+                            }
                         }
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {

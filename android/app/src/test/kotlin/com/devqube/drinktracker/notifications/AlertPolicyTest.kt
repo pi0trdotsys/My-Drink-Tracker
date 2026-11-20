@@ -1,6 +1,7 @@
 package com.devqube.drinktracker.notifications
 
 import com.devqube.drinktracker.data.Status
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -44,4 +45,17 @@ class AlertPolicyTest {
         assertTrue(AlertPolicy.shouldAlert("warn", monday, Status.OK))
         assertTrue(AlertPolicy.shouldAlert("2026-11-16|BOGUS", monday, Status.OK))
     }
+
+    @Test
+    fun `every log plays sound by default, but only escalations pop up`() {
+        assertEquals(AlertPolicy.Delivery(alert = true, headsUp = false), AlertPolicy.delivery(escalated = false, soundEveryLog = true))
+        assertEquals(AlertPolicy.Delivery(alert = true, headsUp = true), AlertPolicy.delivery(escalated = true, soundEveryLog = true))
+    }
+
+    @Test
+    fun `quiet mode plays sound only on escalation`() {
+        assertEquals(AlertPolicy.Delivery(alert = false, headsUp = false), AlertPolicy.delivery(escalated = false, soundEveryLog = false))
+        assertEquals(AlertPolicy.Delivery(alert = true, headsUp = true), AlertPolicy.delivery(escalated = true, soundEveryLog = false))
+    }
 }
+

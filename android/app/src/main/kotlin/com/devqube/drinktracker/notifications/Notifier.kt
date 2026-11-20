@@ -54,6 +54,8 @@ object Notifier {
     private const val ID_STATUS = 1001
     private const val ID_WEEKLY = 1002
     private const val ID_DAILY = 1003
+    private const val ID_UPDATE = 1004
+    private const val CHANNEL_UPDATES = "updates_v1"
 
     private fun soundUri(context: Context, res: Int): Uri = Uri.parse("android.resource://${context.packageName}/$res")
 
@@ -68,6 +70,12 @@ object Notifier {
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
+
+        nm.createNotificationChannel(
+            NotificationChannel(CHANNEL_UPDATES, "Aktualizacje", NotificationManager.IMPORTANCE_LOW).apply {
+                description = "Informacja, że na GitHubie czeka nowa wersja Drink Trackera."
+            }
+        )
 
         AppTheme.entries.forEach { theme ->
             Kind.entries.forEach { kind ->
@@ -129,12 +137,41 @@ object Notifier {
     }
 
     /** Plan/status po wpisie – kanał zależny od tego, jak blisko limitu jesteś. */
-    fun notifyStatus(context: Context, title: String, body: String, status: Status, alert: Boolean, theme: AppTheme) =
-        post(context, ID_STATUS, theme, if (status == Status.OK) Kind.PLAN else Kind.LIMITS, title, body, accent(status), alert)
+    fun notifyStatus(
+        context: Context,
+        title: String,
+        body: String,
+        status: Status,
+        alert: Boolean,
+        theme: AppTheme,
+        headsUp: Boolean = status != Status.OK,
+    ) =
+        // Kanał LIMITS (wysoka ważność) wyskakuje nad innymi aplikacjami – tylko przy eskalacji ostrzeżenia.
+        // Zwykłe wpisy idą kanałem PLAN: grają ten sam dźwięk motywu, ale bez wyskakującego okienka.
+        post(context, ID_STATUS, theme, if (headsUp && status != Status.OK) Kind.LIMITS else Kind.PLAN, title, body, accent(status), alert)
 
     fun notifyWeekly(context: Context, title: String, body: String, theme: AppTheme) =
         post(context, ID_WEEKLY, theme, Kind.WEEKLY, title, body, 0xFFE3A54B.toInt())
 
     fun notifyNudge(context: Context, title: String, body: String, theme: AppTheme) =
         post(context, ID_DAILY, theme, Kind.DAILY, title, body, if (theme == AppTheme.GRAZYNA) 0xFFFF4FA3.toInt() else 0xFFE3A54B.toInt())
+
+    /** „Dostępna wersja X” – cicho, raz na wersję; kliknięcie otwiera kartę aktualizacji w Ustawieniach. */
+    fun notifyUpdate(context: Context, version: String) {
+        if (!canPost(context)) return
+        val open = PendingIntent.getActivity(
+            context, 1, MainActivity.updatesIntent(context),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val n = NotificationCompat.Builder(context, CHANNEL_UPDATES)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Dostępna aktualizacja Drink Trackera")
+            .setContentText("Wersja $version czeka – dotknij, by pobrać i zainstalować.")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setColor(0xFFE3A54B.toInt())
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .build()
+        NotificationManagerCompat.from(context).notify(ID_UPDATE, n)
+    }
 }

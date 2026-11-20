@@ -29,11 +29,13 @@ object LimitChecker {
         val oneBeerUnits = toUnits(500.0, 5.0, settings.gramsPerUnit)
         val (title, body) = voiceFor(settings.theme, settings.vulgarity).planMessage(details, oneBeerUnits)
 
-        // Dźwięk tylko przy pierwszym wpisie tygodnia lub eskalacji statusu; poza tym cicha aktualizacja.
+        // Eskalacja (pierwszy wpis tygodnia albo gorszy status) wyskakuje nad innymi aplikacjami;
+        // pozostałe wpisy grają dźwięk (o ile użytkownik tego chce) bez wyskakującego okienka.
         val monday = mondayOf(LocalDate.now())
-        val alert = AlertPolicy.shouldAlert(store.lastNotifiedStatus(), monday, details.status)
+        val escalated = AlertPolicy.shouldAlert(store.lastNotifiedStatus(), monday, details.status)
+        val d = AlertPolicy.delivery(escalated, settings.soundEveryLog)
 
-        Notifier.notifyStatus(context, title, body, details.status, alert, settings.theme)
+        Notifier.notifyStatus(context, title, body, details.status, d.alert, settings.theme, headsUp = d.headsUp)
         store.setLastNotifiedStatus(AlertPolicy.key(monday, details.status))
     }
 }

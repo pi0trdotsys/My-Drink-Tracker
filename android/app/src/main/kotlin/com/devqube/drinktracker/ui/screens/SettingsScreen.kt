@@ -27,12 +27,14 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devqube.drinktracker.data.AppTheme
 import com.devqube.drinktracker.data.DrinkType
+import com.devqube.drinktracker.data.KropiSync
 import com.devqube.drinktracker.data.Sex
 import com.devqube.drinktracker.data.Vulgarity
 import com.devqube.drinktracker.data.fmt
@@ -48,20 +51,27 @@ import com.devqube.drinktracker.ui.AppViewModel
 import com.devqube.drinktracker.ui.components.Card
 import com.devqube.drinktracker.ui.components.Eyebrow
 import com.devqube.drinktracker.ui.components.SettingSlider
+import com.devqube.drinktracker.ui.components.UpdateCard
 import kotlin.math.roundToInt
 import com.devqube.drinktracker.ui.theme.LocalDrinkColors
 
 @Composable
-fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
+fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier, scrollToUpdatesRequest: Int = 0) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val types by vm.drinkTypes.collectAsStateWithLifecycle()
     val colors = LocalDrinkColors.current
     var showAddType by remember { mutableStateOf(false) }
 
+    val scroll = rememberScrollState()
+    // Powiadomienie „dostępna aktualizacja” otwiera Ustawienia przewinięte do karty aktualizacji.
+    LaunchedEffect(scrollToUpdatesRequest) {
+        if (scrollToUpdatesRequest > 0) scroll.animateScrollTo(scroll.maxValue)
+    }
+
     Column(
         modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scroll)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -149,6 +159,25 @@ fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
             }
         }
 
+        // Dźwięk przy wpisach i integracja z Kropi.
+        Card {
+            Text("Wpisy", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(12.dp))
+            SettingSwitchRow(
+                title = "Dźwięk przy każdym wpisie",
+                subtitle = "Wyłączony: dźwięk tylko przy pierwszym wpisie tygodnia i gdy status się pogarsza. " +
+                    "Wyskakujące okienko i tak pojawia się tylko wtedy.",
+                checked = settings.soundEveryLog && settings.notificationsEnabled,
+                enabled = settings.notificationsEnabled,
+                onChange = { c -> vm.updateSettings { it.copy(soundEveryLog = c) } },
+            )
+            Spacer(Modifier.height(10.dp))
+            KropiRow(
+                checked = settings.kropiSync,
+                onChange = { c -> vm.updateSettings { it.copy(kropiSync = c) } },
+            )
+        }
+
         ThemeCard(
             current = settings.theme,
             vulgarity = settings.vulgarity,
@@ -216,6 +245,8 @@ fun SettingsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 }
             }
         }
+
+        UpdateCard()
 
         Spacer(Modifier.height(8.dp))
     }
@@ -372,4 +403,56 @@ private fun ThemeCard(
             dismissButton = { TextButton(onClick = { confirmGrazyna = false }) { Text("Anuluj") } },
         )
     }
+}
+
+@Composable
+private fun SettingSwitchRow(
+    title: String,
+    subtitle: String?,
+    checked: Boolean,
+    enabled: Boolean = true,
+    onChange: (Boolean) -> Unit,
+) {
+    val colors = LocalDrinkColors.current
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.surface2.copy(alpha = 0.7f))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            subtitle?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.muted) }
+        }
+        Spacer(Modifier.width(10.dp))
+        Switch(
+            checked = checked,
+            enabled = enabled,
+            onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+        )
+    }
+}
+
+/** Wysyłanie alkoholu do Kropi – ze stanem: zainstalowana / za stara na wpisy wsteczne / brak. */
+@Composable
+private fun KropiRow(checked: Boolean, onChange: (Boolean) -> Unit) {
+    val context = LocalContext.current
+    // Sprawdzane przy każdym wejściu na ekran (np. po zainstalowaniu Kropi w tle).
+    val version = remember { KropiSync.installedVersion(context) }
+    val status = when {
+        version == null -> "Nie znaleziono Kropi na tym telefonie."
+        version < KropiSync.MIN_VERSION_WITH_TIME ->
+            "Kropi jest za stara na wpisy wsteczne – trunki z datą wsteczną nie zostaną przekazane. Zaktualizuj Kropi do 1.14+."
+        else -> "Każdy zalogowany trunek trafia też do Kropi jako alkohol (podnosi tam dzienny cel wody)."
+    }
+    SettingSwitchRow(
+        title = "Wysyłaj do Kropi 💧",
+        subtitle = status,
+        checked = checked && version != null,
+        enabled = version != null,
+        onChange = onChange,
+    )
 }

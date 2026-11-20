@@ -27,4 +27,16 @@ object AlertPolicy {
         val lastStatus = runCatching { Status.valueOf(parts[1]) }.getOrNull() ?: return true
         return rank(status) > rank(lastStatus)
     }
+
+    /**
+     * Jak dostarczyć powiadomienie po wpisie.
+     * - [alert]: czy zagrać dźwięk (domyślnie przy każdym wpisie – użytkownik oczekuje potwierdzenia),
+     * - [headsUp]: czy wyskoczyć nad innymi aplikacjami (tylko przy eskalacji, żeby nie spamować).
+     *
+     * Przy wyłączonym [soundEveryLog] wracamy do zachowania z v1.0.2–1.2.1: dźwięk tylko przy eskalacji.
+     */
+    data class Delivery(val alert: Boolean, val headsUp: Boolean)
+
+    fun delivery(escalated: Boolean, soundEveryLog: Boolean): Delivery =
+        Delivery(alert = escalated || soundEveryLog, headsUp = escalated)
 }

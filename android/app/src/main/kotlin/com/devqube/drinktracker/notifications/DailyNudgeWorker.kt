@@ -12,7 +12,10 @@ import com.devqube.drinktracker.data.Store
 import com.devqube.drinktracker.data.decideNudge
 import com.devqube.drinktracker.data.nudgeInputFor
 import com.devqube.drinktracker.data.voiceFor
+import com.devqube.drinktracker.update.UpdateManager
 import com.devqube.drinktracker.widget.AlcoholGlanceWidget
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
@@ -27,6 +30,10 @@ class DailyNudgeWorker(context: Context, params: WorkerParameters) : CoroutineWo
     override suspend fun doWork(): Result {
         // Co godzinę odświeżamy widget: rotacja tekstów i komentarze zależne od pory dnia.
         runCatching { AlcoholGlanceWidget().updateAll(applicationContext) }
+
+        // Nowa wersja na GitHubie: UpdateManager pyta najwyżej co 6 h i zwraca wersję raz (powiadomienie raz na wersję).
+        withContext(Dispatchers.IO) { UpdateManager.backgroundCheck(applicationContext) }
+            ?.let { Notifier.notifyUpdate(applicationContext, it) }
 
         val store = Store.get(applicationContext)
         val settings = store.snapshotSettings()

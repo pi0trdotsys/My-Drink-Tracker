@@ -53,6 +53,10 @@ data class AppSettings(
     val vulgarity: Vulgarity = Vulgarity.MAX,
     /** Sensowne przypomnienia w ciągu dnia (południe / 17:00 / wieczór). */
     val dailyNudges: Boolean = false,
+    /** Dźwięk przy każdym wpisie (nie tylko przy zmianie statusu). Okienko wyskakuje tylko przy eskalacji. */
+    val soundEveryLog: Boolean = true,
+    /** Wysyłaj zalogowany alkohol do aplikacji Kropi (nawodnienie), żeby nie logować dwa razy. */
+    val kropiSync: Boolean = true,
 ) {
     val warnRatio: Double get() = warnRatioPercent / 100.0
 }

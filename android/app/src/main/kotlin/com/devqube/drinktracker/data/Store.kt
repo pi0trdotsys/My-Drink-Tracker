@@ -34,6 +34,8 @@ class Store(private val context: Context) {
         val THEME = stringPreferencesKey("theme")
         val DAILY_NUDGES = booleanPreferencesKey("daily_nudges")
         val VULGARITY = stringPreferencesKey("vulgarity")
+        val SOUND_EVERY_LOG = booleanPreferencesKey("sound_every_log")
+        val KROPI_SYNC = booleanPreferencesKey("kropi_sync")
         val SENT_NUDGES = stringPreferencesKey("sent_nudges")
     }
 
@@ -48,6 +50,8 @@ class Store(private val context: Context) {
         theme = runCatching { AppTheme.valueOf(this[Keys.THEME] ?: "CLASSIC") }.getOrDefault(AppTheme.CLASSIC),
         dailyNudges = this[Keys.DAILY_NUDGES] ?: false,
         vulgarity = runCatching { Vulgarity.valueOf(this[Keys.VULGARITY] ?: "MAX") }.getOrDefault(Vulgarity.MAX),
+        soundEveryLog = this[Keys.SOUND_EVERY_LOG] ?: true,
+        kropiSync = this[Keys.KROPI_SYNC] ?: true,
     )
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { it.toSettings() }
@@ -111,6 +115,8 @@ class Store(private val context: Context) {
             p[Keys.THEME] = next.theme.name
             p[Keys.DAILY_NUDGES] = next.dailyNudges
             p[Keys.VULGARITY] = next.vulgarity.name
+            p[Keys.SOUND_EVERY_LOG] = next.soundEveryLog
+            p[Keys.KROPI_SYNC] = next.kropiSync
         }
     }
 

@@ -32,21 +32,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val drinkTypes: StateFlow<List<DrinkType>> =
         store.allDrinkTypes.stateIn(viewModelScope, SharingStarted.Eagerly, DEFAULT_DRINK_TYPES)
 
-    fun addDrink(name: String, volumeMl: Double, abv: Double, timestamp: Long = System.currentTimeMillis()) {
+    /**
+     * Zapisuje trunek i zwraca utworzony wpis (np. do wysłania do Kropi przez ekran, który ma kontekst
+     * aktywności). Wpis powstaje od razu; zapis, powiadomienie i odświeżenie widgetu idą w tle.
+     */
+    fun addDrink(name: String, volumeMl: Double, abv: Double, timestamp: Long = System.currentTimeMillis()): DrinkEntry {
+        val entry = DrinkEntry(
+            id = newEntryId(),
+            timestamp = timestamp,
+            name = name,
+            volumeMl = volumeMl,
+            abv = abv,
+            loggedUnits = toUnits(volumeMl, abv, settings.value.gramsPerUnit),
+        )
         viewModelScope.launch {
-            val gramsPerUnit = store.snapshotSettings().gramsPerUnit
-            val entry = DrinkEntry(
-                id = newEntryId(),
-                timestamp = timestamp,
-                name = name,
-                volumeMl = volumeMl,
-                abv = abv,
-                loggedUnits = toUnits(volumeMl, abv, gramsPerUnit),
-            )
             store.addEntry(entry)
             LimitChecker.checkAndNotify(getApplication())
             AlcoholGlanceWidget().updateAll(getApplication())
         }
+        return entry
     }
 
     fun deleteEntry(id: Long) {

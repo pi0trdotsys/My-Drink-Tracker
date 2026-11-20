@@ -55,6 +55,14 @@ Powiadomienia „planujące" tydzień, z dźwiękiem brzdęku kieliszków:
   - Widget w panterce z różową ramką, ikoną narzędzia (kapeć → patelnia → wałek), paskiem
     „Wkurw Grażyny”, rotującymi tekstami zależnymi od pory dnia (kac rano, pokusa po 17:00,
     „odstaw butelkę” wieczorem), dymkiem „Grażyna mówi:” i przyciskiem „+ Przyznaję się” (4×2).
+- **Integracja z Kropi** 💧 – każdy zalogowany trunek trafia też do aplikacji Kropi (nawodnienie)
+  jako alkohol, z ilością, czasem i nazwą; wpisy wsteczne lądują na właściwym dniu (Kropi 1.14+).
+  Bez logowania w dwóch aplikacjach. Przełącznik w Ustawieniach → Wpisy.
+- **Dźwięk przy każdym wpisie** (domyślnie włączony) – wyskakujące okienko tylko przy pierwszym wpisie
+  tygodnia i pogorszeniu statusu; po wyłączeniu dźwięk gra tylko wtedy.
+- **Aktualizacje z poziomu aplikacji** – Ustawienia → Aktualizacje sprawdza ostatnie wydanie na GitHubie
+  (także w tle, z powiadomieniem raz na wersję), pobiera APK, weryfikuje sumę SHA-256, pakiet, wersję
+  i podpis, po czym oddaje go systemowemu instalatorowi.
 - **Widget na ekran główny** (Glance) – skalowalny; czyta te same dane, klik otwiera aplikację.
 - **Fancy smaczek** – złoty „shimmer" przesuwający się po głównej liczbie, rotujące dowcipne
   hasła zależne od statusu, licznik trzeźwych dni z odznakami (🌱⭐🔥🥇🏆) oraz powiadomienia
